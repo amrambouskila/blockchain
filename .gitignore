@@ -1,0 +1,46 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.egg-info/
+dist/
+build/
+.venv/
+venv/
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# Environment
+.env
+.env.*
+
+# OS
+.DS_Store
+Thumbs.db
+
+# pytest
+.pytest_cache/
+
+# Docker
+.docker/
+docker-compose.override.yml
+
+# Claude state
+.claude/
+
+# Bitcoin Core reference clone (has its own .git, too large to track)
+blockchain_dev/bitcoin_blockchain_dev/
+
+# RPC credentials (sensitive)
+rpc_credentials.json
+**/rpc_credentials.json
+
+# Node (future phases)
+node_modules/
+dist/
+*.tsbuildinfo
