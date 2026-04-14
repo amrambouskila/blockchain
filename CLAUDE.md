@@ -34,7 +34,7 @@ This is a **blockchain learning and research project**, not a production cryptoc
 ## 1. Project Identity
 
 - **Name:** Blockchain
-- **Location:** `/Users/amrambouskila/IMPORTANT/Projects/blockchain/`
+- **Location:** `blockchain/`
 - **Master plan:** `docs/BLOCKCHAIN_MASTER_PLAN.md`
 - **Nature:** Educational/research -- learning blockchain internals by building
 - **Active code:** `blockchain_dev/bitcoin_wallet_dev/`
