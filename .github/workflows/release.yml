@@ -1,0 +1,60 @@
+name: Release
+
+# Manual version bump on main. Bumps pyproject.toml's
+# [project].version (the project's source-of-truth), commits, tags, pushes.
+
+on:
+  workflow_dispatch:
+    inputs:
+      bump:
+        description: "Semver level to bump"
+        required: true
+        type: choice
+        options:
+          - patch
+          - minor
+          - major
+
+permissions:
+  contents: write
+
+jobs:
+  bump:
+    name: Bump version + tag
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main'
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - uses: astral-sh/setup-uv@v3
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+
+      - name: Configure git author
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+      - name: Bump pyproject.toml
+        id: bump
+        run: |
+          uv version --bump "${{ inputs.bump }}"
+          new_version=$(uv version --short)
+          echo "new_version=v${new_version}" >> "$GITHUB_OUTPUT"
+
+      - name: Commit + tag
+        run: |
+          version="${{ steps.bump.outputs.new_version }}"
+          git add pyproject.toml
+          if [ -f uv.lock ]; then
+            git add uv.lock
+          fi
+          git commit -m "release: ${version}"
+          git tag "${version}"
+          git push origin main
+          git push origin "${version}"

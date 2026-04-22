@@ -1,0 +1,12 @@
+[project]
+name = "blockchain"
+version = "0.0.1"
+description = "Blockchain experiments — bitcoin wallet and related cryptocurrency tooling."
+requires-python = ">=3.13"
+
+[tool.ruff]
+line-length = 120
+target-version = "py313"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "N", "UP", "ANN"]
