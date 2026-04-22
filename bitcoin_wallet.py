@@ -1,20 +1,24 @@
-# Import essential libraries for cryptographic and data encoding operations
-import os
-import ecdsa
-import struct
+from __future__ import annotations
+
 import hashlib
-import binascii
-import base58  # Import base58 for encoding and decoding
-from ecdsa.util import sigencode_der  # Import sigencode_der for signature encoding
-import secrets  # Import secrets for high-entropy private key generation
-import random  # Import random for additional entropy
 import json
-from bitcoinrpc.authproxy import AuthServiceProxy, JSONRPCException  # Import library for RPC connection
+import os
+import random
+import secrets
+from decimal import Decimal
+
+import base58
+import ecdsa
+from bitcoinrpc.authproxy import AuthServiceProxy, JSONRPCException
 
 
 # Define a class BitcoinWallet for managing Bitcoin wallet operations
 class BitcoinWallet:
-    def __init__(self, rpc_credentials_file='rpc_credentials.json', private_key=None):
+    def __init__(
+        self,
+        rpc_credentials_file: str = 'rpc_credentials.json',
+        private_key: str | None = None,
+    ) -> None:
         # Initialize the wallet with an optional private key
         self.rpc_credentials = self.get_rpc_credentials(rpc_credentials_file)
         self.rpc_connection = self.connect_to_rpc()
@@ -32,10 +36,10 @@ class BitcoinWallet:
         self.address = self.generate_address(self.public_key)
 
     @staticmethod
-    def get_rpc_credentials(file_path):
+    def get_rpc_credentials(file_path: str) -> dict[str, str]:
         if os.path.exists(file_path):
             # Load existing credentials if the file exists
-            with open(file_path, 'r') as file:
+            with open(file_path) as file:
                 credentials = json.load(file)
         else:
             # Generate new RPC credentials
@@ -49,20 +53,20 @@ class BitcoinWallet:
 
         return credentials
 
-    def connect_to_rpc(self):
+    def connect_to_rpc(self) -> AuthServiceProxy:
         rpc_user = self.rpc_credentials['rpc_user']
         rpc_password = self.rpc_credentials['rpc_password']
         rpc_url = f'http://{rpc_user}:{rpc_password}@127.0.0.1:8332'
         return AuthServiceProxy(rpc_url)
 
     @staticmethod
-    def generate_private_key():
+    def generate_private_key() -> str:
         # Securely generate a random 256-bit private key using secrets and os for high entropy
         entropy = secrets.token_bytes(32) + os.urandom(32) + random.getrandbits(256).to_bytes(32, 'big')
         return hashlib.sha256(entropy).hexdigest()
 
     @staticmethod
-    def derive_public_key(private_key_hex):
+    def derive_public_key(private_key_hex: str) -> str:
         # Derive an ECDSA public key from the provided hex-encoded private key
         private_key_bytes = bytes.fromhex(private_key_hex)
         signing_key = ecdsa.SigningKey.from_string(private_key_bytes, curve=ecdsa.SECP256k1)
@@ -88,7 +92,7 @@ class BitcoinWallet:
         return compressed_public_key_bytes.hex()
 
     @staticmethod
-    def generate_address(public_key_hex):
+    def generate_address(public_key_hex: str) -> str:
         # Generate a Bitcoin address from a hex-encoded public key
         public_key_bytes = bytes.fromhex(public_key_hex)
         sha256_pubkey = hashlib.sha256(public_key_bytes).digest()
@@ -99,7 +103,7 @@ class BitcoinWallet:
         address = base58.b58encode(binary_address)
         return address.decode()
 
-    def get_balance(self):
+    def get_balance(self) -> Decimal | int:
         # Retrieve UTXOs for the wallet address to calculate the balance
         try:
             utxos = self.rpc_connection.listunspent(0, 9999999, [self.address])
@@ -109,7 +113,11 @@ class BitcoinWallet:
             print(f"An error occurred: {e}")
             return 0
 
-    def create_raw_transaction(self, inputs, outputs):
+    def create_raw_transaction(
+        self,
+        inputs: list[dict[str, object]],
+        outputs: dict[str, Decimal | float],
+    ) -> str | None:
         # Create a raw transaction using the inputs and outputs
         try:
             raw_tx = self.rpc_connection.createrawtransaction(inputs, outputs)
@@ -118,7 +126,7 @@ class BitcoinWallet:
             print(f"An error occurred while creating raw transaction: {e}")
             return None
 
-    def sign_transaction(self, raw_tx):
+    def sign_transaction(self, raw_tx: str) -> str | None:
         # Sign the raw transaction using the wallet's private key
         try:
             signed_tx = self.rpc_connection.signrawtransactionwithkey(raw_tx, [self.private_key])
@@ -127,7 +135,7 @@ class BitcoinWallet:
             print(f"An error occurred while signing the transaction: {e}")
             return None
 
-    def broadcast_transaction(self, signed_tx):
+    def broadcast_transaction(self, signed_tx: str) -> str | None:
         # Broadcast the signed transaction to the Bitcoin network
         try:
             tx_id = self.rpc_connection.sendrawtransaction(signed_tx)
@@ -136,7 +144,7 @@ class BitcoinWallet:
             print(f"An error occurred while broadcasting the transaction: {e}")
             return None
 
-    def create_and_send_transaction(self, recipient_address, amount):
+    def create_and_send_transaction(self, recipient_address: str, amount: float) -> None:
         # Create and send a transaction
         utxos = self.rpc_connection.listunspent(0, 9999999, [self.address])
         total_input = 0
