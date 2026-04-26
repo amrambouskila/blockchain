@@ -1,0 +1,48 @@
+{
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Write|Edit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "EDITED_FILE=\"$TOOL_INPUT_FILE_PATH\" && case \"$EDITED_FILE\" in *.env*|*credentials*|*secrets*|*.pem|*.key|*.p12) echo '{\"decision\":\"block\",\"reason\":\"Sensitive file detected. Requires explicit user confirmation before writing.\"}' ;; */bitcoin_blockchain_dev/*) echo '{\"decision\":\"block\",\"reason\":\"bitcoin_blockchain_dev/ is READ-ONLY reference material. DO NOT modify.\"}' ;; *rpc_credentials*) echo '{\"decision\":\"block\",\"reason\":\"RPC credentials file must not be committed or overwritten by AI.\"}' ;; *) ;; esac",
+            "timeout": 3000
+          }
+        ]
+      }
+    ],
+    "PostToolUse": [
+      {
+        "matcher": "Write|Edit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "EDITED_FILE=\"$TOOL_INPUT_FILE_PATH\" && case \"$EDITED_FILE\" in *wallet*|*keys*|*address*|*transaction*|*signer*) echo 'CRYPTO CODE EDITED: '\"$EDITED_FILE\" && echo '' && echo 'Before continuing, verify:' && echo '  1. No private keys logged or printed' && echo '  2. Entropy sources are secrets/os.urandom only' && echo '  3. No custom cryptography introduced' && echo '  4. Type annotations on all functions' && echo '  5. Known test vectors validate the operation' ;; *constants*) echo 'CONSTANTS FILE EDITED: '\"$EDITED_FILE\" && echo '' && echo 'Verify:' && echo '  1. Values match Bitcoin protocol specification' && echo '  2. Units and encoding documented' ;; */tests/*) echo 'TEST FILE EDITED: '\"$EDITED_FILE\" && echo '' && echo 'Verify:' && echo '  1. At least one test uses known Bitcoin test vectors' && echo '  2. No mocking of cryptographic operations' && echo '  3. Exact equality for deterministic crypto ops' ;; *) ;; esac",
+            "timeout": 3000
+          }
+        ]
+      }
+    ],
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "echo '=== SESSION END CHECK ===' && CHANGED=$(git diff --name-only 2>/dev/null) && STAGED=$(git diff --cached --name-only 2>/dev/null) && if [ -n \"$CHANGED\" ] || [ -n \"$STAGED\" ]; then echo 'UNCOMMITTED CHANGES DETECTED:' && echo \"$CHANGED\" && echo \"$STAGED\" && echo '' && DOCS_TOUCHED=false && echo \"$CHANGED $STAGED\" | grep -q 'docs/' && DOCS_TOUCHED=true; if [ \"$DOCS_TOUCHED\" = false ]; then echo 'WARNING: Files changed but docs/ not updated.' && echo 'Consider updating: status.md, versions.md'; fi; else echo 'No uncommitted changes.'; fi",
+            "timeout": 10000
+          }
+        ]
+      },
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "echo '{\"systemMessage\":\"SESSION END -- MEMORY REVIEW: Before this session closes, review what was learned and suggest memories the user may want to save. Check ~/.codex/memories/-Users-amrambouskila-IMPORTANT-Projects-blockchain/memory/MEMORY.md first to avoid duplicates. Memory types: user (preferences, knowledge), feedback (corrections, confirmed approaches -- include WHY), project (decisions, deadlines), reference (external pointers). NOT worth saving: anything derivable from code or git history.\"}'",
+            "timeout": 10000
+          }
+        ]
+      }
+    ]
+  }
+}
