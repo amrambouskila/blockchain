@@ -1,5 +1,7 @@
 # Blockchain Project - AGENTS.md
 
+<mandatory_workflow>
+
 > **MANDATORY WORKFLOW: READ THIS ENTIRE FILE BEFORE EVERY CHANGE.** Every time. No skimming, no assuming prior-session context carries over -- it does not.
 >
 > **Why:** This project spans multiple sessions and months of development. Skipping the re-read produces decisions that contradict the architecture, duplicate existing patterns, break data contracts, or introduce tech debt that compounds.
@@ -12,7 +14,11 @@
 > 5. Read the source files you plan to modify -- understand existing patterns first.
 > 6. Then implement, following the rules and contracts defined here.
 
+</mandatory_workflow>
+
 ---
+
+<critical_context>
 
 ## 0. Critical Context
 
@@ -29,7 +35,11 @@ This is a **blockchain learning and research project**, not a production cryptoc
 
 **Current phase:** Phase 1 -- Python wallet basics.
 
+</critical_context>
+
 ---
+
+<project_identity>
 
 ## 1. Project Identity
 
@@ -40,7 +50,11 @@ This is a **blockchain learning and research project**, not a production cryptoc
 - **Active code:** `blockchain_dev/bitcoin_wallet_dev/`
 - **Reference code:** `blockchain_dev/bitcoin_blockchain_dev/` (READ-ONLY)
 
+</project_identity>
+
 ---
+
+<phase_constraints>
 
 ## 2. Phase Constraints
 
@@ -84,7 +98,11 @@ This is a **blockchain learning and research project**, not a production cryptoc
 - mempool and transaction relay
 - Simple scripting language for transaction validation
 
+</phase_constraints>
+
 ---
+
+<architecture>
 
 ## 3. Architecture & Code Rules
 
@@ -124,7 +142,11 @@ This is a **blockchain learning and research project**, not a production cryptoc
 - Test address generation against known Bitcoin addresses
 - `np.testing`-style tolerance is not needed here -- crypto operations are deterministic, use exact equality
 
+</architecture>
+
 ---
+
+<file_structure>
 
 ## 4. Directory Structure
 
@@ -157,7 +179,11 @@ blockchain/
 - `blockchain_dev/bitcoin_wallet_dev/bitcoin_wallet.py` -- the wallet class, run with `python bitcoin_wallet.py`
 - `blockchain_dev/bitcoin_blockchain_dev/` -- Bitcoin Core reference (read-only, has its own `.git`)
 
+</file_structure>
+
 ---
+
+<non_negotiable>
 
 ## 5. Bitcoin Core Reference -- READ-ONLY Contract
 
@@ -176,7 +202,11 @@ The `blockchain_dev/bitcoin_blockchain_dev/` directory is a full clone of Bitcoi
    - `src/net.cpp` -- P2P networking
    - `src/miner.cpp` -- block mining
 
+</non_negotiable>
+
 ---
+
+<tech_stack>
 
 ## 6. Dependencies (Phase 1)
 
@@ -189,7 +219,11 @@ The `blockchain_dev/bitcoin_blockchain_dev/` directory is a full clone of Bitcoi
 | `pytest-cov` | Coverage | `>=4.0` |
 | `ruff` | Lint + format | `>=0.3` |
 
+</tech_stack>
+
 ---
+
+<commands>
 
 ## 7. Local Commands
 
@@ -206,7 +240,11 @@ ruff check .
 ruff format --check .
 ```
 
+</commands>
+
 ---
+
+<change_policy>
 
 ## 8. Change Policy & Documentation
 
@@ -215,7 +253,11 @@ After every significant change:
 2. Update `docs/versions.md` with the computed next version (see global AGENTS.md section 6)
 3. If architecture decisions were made, document them in the master plan
 
+</change_policy>
+
 ---
+
+<versioning>
 
 ## 9. Versioning
 
@@ -223,7 +265,11 @@ After every significant change:
 - **Current version:** `0.1.0` (initial scaffold + existing wallet code)
 - Follows strict semver per global AGENTS.md section 6
 
+</versioning>
+
 ---
+
+<definition_of_done>
 
 ## 10. Phase Completion Gate -- Phase 1
 
@@ -238,7 +284,11 @@ Phase 1 is done when:
 - [ ] `docs/status.md` and `docs/versions.md` are current
 - [ ] README.md accurately describes the project and how to run it
 
+</definition_of_done>
+
 ---
+
+<self_audit>
 
 ## 11. Output & Completion Expectations
 
@@ -252,3 +302,5 @@ At the end of every non-trivial task, run the universal self-audit checklist fro
 ---
 
 **Closing reminder:** Re-read this file before the next change. Prior sessions do not carry over.
+
+</self_audit>

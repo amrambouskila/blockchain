@@ -1,0 +1,1755 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>blockchain — Project Documentation</title>
+  <style>
+/* ============================================================================
+   doc.css — Shared design system for project documentation pages.
+   One source of truth for every project's PROJECT_DOCUMENTATION.html.
+   Inlined directly into this PROJECT_DOCUMENTATION.html (self-contained; no external stylesheet).
+   Do not fork per-project styles. Restyle here to restyle every project at once.
+   ============================================================================ */
+
+/* ---- Theme tokens ------------------------------------------------------- */
+:root {
+  --accent: #4f46e5;
+  --accent-soft: #eef2ff;
+  --accent-border: #c7d2fe;
+  --accent-text: #4338ca;
+
+  --bg: #ffffff;
+  --bg-alt: #f7f8fa;
+  --panel: #ffffff;
+  --panel-alt: #f3f4f6;
+  --border: #e5e7eb;
+  --border-strong: #d1d5db;
+  --text: #1f2937;
+  --text-soft: #374151;
+  --muted: #6b7280;
+
+  --code-bg: #f6f8fa;
+  --code-text: #1f2937;
+  --code-border: #e5e7eb;
+
+  --fileref-bg: #eef2ff;
+  --fileref-text: #3730a3;
+  --fileref-border: #c7d2fe;
+
+  --note-bg: #eff6ff;   --note-border: #3b82f6;   --note-text: #1e40af;
+  --tip-bg: #ecfdf5;    --tip-border: #10b981;    --tip-text: #065f46;
+  --warn-bg: #fffbeb;   --warn-border: #f59e0b;   --warn-text: #92400e;
+  --key-bg: #faf5ff;    --key-border: #a855f7;    --key-text: #6b21a8;
+  --danger-bg: #fef2f2; --danger-border: #ef4444; --danger-text: #991b1b;
+
+  --shadow: 0 1px 2px rgba(16,24,40,.06), 0 1px 3px rgba(16,24,40,.10);
+  --shadow-lg: 0 10px 30px rgba(16,24,40,.12);
+
+  --radius: 12px;
+  --radius-sm: 8px;
+  --header-h: 64px;
+
+  --font: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  --mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, "Liberation Mono", monospace;
+
+  --maxw: 980px;
+}
+
+:root[data-theme="dark"] {
+  --accent: #818cf8;
+  --accent-soft: #1e213a;
+  --accent-border: #3b3f6b;
+  --accent-text: #a5b4fc;
+
+  --bg: #0d1117;
+  --bg-alt: #0a0d12;
+  --panel: #161b22;
+  --panel-alt: #1c2230;
+  --border: #2d333b;
+  --border-strong: #3d444d;
+  --text: #e6edf3;
+  --text-soft: #c9d1d9;
+  --muted: #8b949e;
+
+  --code-bg: #161b22;
+  --code-text: #e6edf3;
+  --code-border: #30363d;
+
+  --fileref-bg: #1e213a;
+  --fileref-text: #c7d2fe;
+  --fileref-border: #3b3f6b;
+
+  --note-bg: #0d2138;   --note-border: #3b82f6;   --note-text: #93c5fd;
+  --tip-bg: #082a1e;    --tip-border: #10b981;    --tip-text: #6ee7b7;
+  --warn-bg: #2b2410;   --warn-border: #f59e0b;   --warn-text: #fcd34d;
+  --key-bg: #221033;    --key-border: #a855f7;    --key-text: #d8b4fe;
+  --danger-bg: #2c1212; --danger-border: #ef4444; --danger-text: #fca5a5;
+
+  --shadow: 0 1px 2px rgba(0,0,0,.3), 0 1px 3px rgba(0,0,0,.4);
+  --shadow-lg: 0 10px 30px rgba(0,0,0,.5);
+}
+
+/* ---- Base --------------------------------------------------------------- */
+* { box-sizing: border-box; }
+html { scroll-behavior: smooth; }
+body {
+  margin: 0;
+  font-family: var(--font);
+  background: var(--bg-alt);
+  color: var(--text);
+  line-height: 1.65;
+  font-size: 16px;
+  -webkit-font-smoothing: antialiased;
+}
+a { color: var(--accent-text); text-decoration: none; }
+a:hover { text-decoration: underline; }
+h1, h2, h3, h4 { line-height: 1.25; color: var(--text); }
+p { margin: 0 0 1rem; }
+hr { border: none; border-top: 1px solid var(--border); margin: 1.5rem 0; }
+
+/* ---- Scroll progress bar ------------------------------------------------ */
+#scrollProgress {
+  position: fixed; top: 0; left: 0; height: 3px; width: 0%;
+  background: linear-gradient(90deg, var(--accent), #ec4899);
+  z-index: 1000; transition: width .08s linear;
+}
+
+/* ---- Header ------------------------------------------------------------- */
+.doc-header {
+  position: sticky; top: 0; z-index: 900;
+  height: var(--header-h);
+  display: flex; align-items: center; gap: 1rem;
+  padding: 0 1.25rem;
+  background: color-mix(in srgb, var(--bg) 88%, transparent);
+  backdrop-filter: saturate(140%) blur(10px);
+  border-bottom: 1px solid var(--border);
+}
+.doc-header .brand { display: flex; flex-direction: column; min-width: 0; }
+.doc-header .brand .kicker {
+  font-size: .68rem; letter-spacing: .14em; text-transform: uppercase;
+  color: var(--muted); font-weight: 700;
+}
+.doc-header .brand .title {
+  font-size: 1.05rem; font-weight: 700; white-space: nowrap;
+  overflow: hidden; text-overflow: ellipsis; max-width: 46vw;
+}
+.doc-header .spacer { flex: 1 1 auto; }
+
+.doc-search {
+  position: relative; display: flex; align-items: center;
+}
+.doc-search input {
+  width: 230px; max-width: 36vw;
+  padding: .5rem .75rem .5rem 2rem;
+  border: 1px solid var(--border-strong); border-radius: 999px;
+  background: var(--panel); color: var(--text); font-size: .9rem;
+  outline: none; transition: border-color .15s, box-shadow .15s, width .2s;
+}
+.doc-search input:focus {
+  border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-soft); width: 280px;
+}
+.doc-search::before {
+  content: ""; position: absolute; left: .65rem; width: 14px; height: 14px; opacity: .55;
+  background: currentColor;
+  -webkit-mask: var(--icon-search) center/contain no-repeat;
+          mask: var(--icon-search) center/contain no-repeat;
+  color: var(--muted);
+}
+.search-count {
+  position: absolute; right: .6rem; font-size: .72rem; color: var(--muted);
+  pointer-events: none;
+}
+
+.btn {
+  display: inline-flex; align-items: center; gap: .4rem;
+  padding: .42rem .7rem; font-size: .82rem; font-weight: 600;
+  border: 1px solid var(--border-strong); border-radius: var(--radius-sm);
+  background: var(--panel); color: var(--text-soft); cursor: pointer;
+  transition: background .15s, border-color .15s, color .15s; white-space: nowrap;
+}
+.btn:hover { background: var(--panel-alt); border-color: var(--accent); color: var(--accent-text); }
+.btn .ico { width: 15px; height: 15px; background: currentColor;
+  -webkit-mask-size: contain; mask-size: contain;
+  -webkit-mask-repeat: no-repeat; mask-repeat: no-repeat;
+  -webkit-mask-position: center; mask-position: center; }
+.btn-group { display: flex; gap: .4rem; }
+@media (max-width: 760px) { .btn .label { display: none; } .doc-header .title { max-width: 32vw; } }
+
+/* ---- Layout ------------------------------------------------------------- */
+.doc-layout {
+  display: grid; grid-template-columns: 290px minmax(0, 1fr);
+  align-items: start; gap: 0;
+  max-width: 1400px; margin: 0 auto;
+}
+.doc-toc {
+  position: sticky; top: var(--header-h);
+  height: calc(100vh - var(--header-h));
+  overflow-y: auto; padding: 1.25rem .75rem 3rem 1.25rem;
+  border-right: 1px solid var(--border);
+}
+.doc-toc .toc-title {
+  font-size: .7rem; letter-spacing: .12em; text-transform: uppercase;
+  color: var(--muted); font-weight: 700; margin: 0 0 .5rem .5rem;
+}
+.doc-toc ul { list-style: none; margin: 0; padding: 0; }
+.doc-toc li { margin: 0; }
+.doc-toc a {
+  display: block; padding: .32rem .5rem; border-radius: 6px;
+  color: var(--text-soft); font-size: .86rem; line-height: 1.4;
+  border-left: 2px solid transparent;
+}
+.doc-toc a:hover { background: var(--panel-alt); text-decoration: none; }
+.doc-toc a.sub { padding-left: 1.4rem; font-size: .8rem; color: var(--muted); }
+.doc-toc a.active {
+  color: var(--accent-text); background: var(--accent-soft);
+  border-left-color: var(--accent); font-weight: 600;
+}
+.doc-toc .toc-num {
+  display: inline-block; min-width: 1.4em; color: var(--muted);
+  font-variant-numeric: tabular-nums; font-weight: 600;
+}
+.doc-toc a.active .toc-num { color: var(--accent); }
+
+.doc-content { padding: 2rem 2.5rem 6rem; min-width: 0; }
+.doc-content-inner { max-width: var(--maxw); margin: 0 auto; }
+@media (max-width: 980px) {
+  .doc-layout { grid-template-columns: 1fr; }
+  .doc-toc { display: none; }
+  .doc-content { padding: 1.25rem 1rem 4rem; }
+}
+
+/* ---- Hero (page intro) -------------------------------------------------- */
+.doc-hero { margin-bottom: 1.75rem; }
+.doc-hero h1 { font-size: 2.1rem; margin: 0 0 .4rem; letter-spacing: -.02em; }
+.doc-hero .lede { font-size: 1.12rem; color: var(--text-soft); margin: 0 0 1rem; }
+.badge-row { display: flex; flex-wrap: wrap; gap: .5rem; margin-bottom: 1rem; }
+.badge {
+  display: inline-flex; align-items: center; gap: .35rem;
+  padding: .25rem .6rem; border-radius: 999px; font-size: .76rem; font-weight: 600;
+  background: var(--panel-alt); color: var(--text-soft); border: 1px solid var(--border);
+}
+.badge.accent { background: var(--accent-soft); color: var(--accent-text); border-color: var(--accent-border); }
+.badge.green  { background: var(--tip-bg); color: var(--tip-text); border-color: var(--tip-border); }
+.badge.amber  { background: var(--warn-bg); color: var(--warn-text); border-color: var(--warn-border); }
+.badge.purple { background: var(--key-bg); color: var(--key-text); border-color: var(--key-border); }
+
+.meta-grid {
+  display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+  gap: .75rem; margin: 1rem 0 0;
+}
+.meta-grid .meta-item {
+  background: var(--panel); border: 1px solid var(--border); border-radius: var(--radius-sm);
+  padding: .7rem .85rem;
+}
+.meta-grid .meta-k {
+  font-size: .68rem; letter-spacing: .08em; text-transform: uppercase;
+  color: var(--muted); font-weight: 700; margin-bottom: .15rem;
+}
+.meta-grid .meta-v { font-size: .92rem; font-weight: 600; color: var(--text); }
+
+/* ---- Sections (collapsible top level) ----------------------------------- */
+.doc-section { scroll-margin-top: calc(var(--header-h) + 12px); margin-bottom: 1.1rem; }
+.doc-section > details {
+  background: var(--panel); border: 1px solid var(--border);
+  border-radius: var(--radius); box-shadow: var(--shadow); overflow: hidden;
+}
+.doc-section > details[open] { box-shadow: var(--shadow-lg); }
+.doc-section > details > summary {
+  list-style: none; cursor: pointer; user-select: none;
+  display: flex; align-items: center; gap: .75rem;
+  padding: 1rem 1.25rem; font-weight: 700;
+}
+.doc-section > details > summary::-webkit-details-marker { display: none; }
+.doc-section > details > summary:hover { background: var(--panel-alt); }
+.doc-section > details > summary h2 {
+  font-size: 1.2rem; margin: 0; font-weight: 700; flex: 1 1 auto;
+}
+.doc-section .sec-num {
+  display: inline-flex; align-items: center; justify-content: center;
+  min-width: 1.9rem; height: 1.9rem; border-radius: 8px;
+  background: var(--accent-soft); color: var(--accent-text);
+  font-size: .85rem; font-weight: 800; font-variant-numeric: tabular-nums;
+}
+.doc-section .chevron {
+  width: 18px; height: 18px; color: var(--muted); transition: transform .2s; flex: 0 0 auto;
+  background: currentColor;
+  -webkit-mask: var(--icon-chevron) center/contain no-repeat;
+          mask: var(--icon-chevron) center/contain no-repeat;
+}
+.doc-section > details[open] > summary .chevron { transform: rotate(90deg); }
+.sec-body { padding: .25rem 1.5rem 1.5rem; border-top: 1px solid var(--border); }
+.sec-body > :first-child { margin-top: 1rem; }
+
+/* sub-collapsibles inside a section (per-component drilldowns) */
+details.sub {
+  border: 1px solid var(--border); border-radius: var(--radius-sm);
+  background: var(--bg-alt); margin: .85rem 0; overflow: hidden;
+}
+details.sub > summary {
+  list-style: none; cursor: pointer; padding: .7rem 1rem; font-weight: 600;
+  display: flex; align-items: center; gap: .55rem; font-size: .96rem;
+}
+details.sub > summary::-webkit-details-marker { display: none; }
+details.sub > summary:hover { background: var(--panel-alt); }
+details.sub > summary::before {
+  content: ""; width: 14px; height: 14px; color: var(--muted); transition: transform .2s; flex: 0 0 auto;
+  background: currentColor;
+  -webkit-mask: var(--icon-chevron) center/contain no-repeat;
+          mask: var(--icon-chevron) center/contain no-repeat;
+}
+details.sub[open] > summary::before { transform: rotate(90deg); }
+details.sub > summary .sub-tag {
+  margin-left: auto; font-family: var(--mono); font-size: .72rem; font-weight: 600;
+  color: var(--muted); background: var(--panel-alt); border: 1px solid var(--border);
+  padding: .1rem .45rem; border-radius: 6px;
+}
+.sub-body { padding: .25rem 1rem 1rem; }
+.sub-body > :first-child { margin-top: .65rem; }
+
+/* ---- File references ---------------------------------------------------- */
+code.fileref {
+  font-family: var(--mono); font-size: .82em; font-weight: 600;
+  background: var(--fileref-bg); color: var(--fileref-text);
+  border: 1px solid var(--fileref-border); border-radius: 6px;
+  padding: .08em .45em .08em 1.5em; cursor: pointer; position: relative;
+  white-space: nowrap; transition: filter .12s;
+}
+code.fileref::before {
+  content: ""; position: absolute; left: .4em; top: 50%; transform: translateY(-50%);
+  width: .85em; height: .85em; background: currentColor; opacity: .8;
+  -webkit-mask: var(--icon-file) center/contain no-repeat;
+          mask: var(--icon-file) center/contain no-repeat;
+}
+code.fileref:hover { filter: brightness(.96); text-decoration: none; }
+:root[data-theme="dark"] code.fileref:hover { filter: brightness(1.15); }
+code.fileref.copied { background: var(--tip-bg); color: var(--tip-text); border-color: var(--tip-border); }
+code.fileref.dir::before { -webkit-mask: var(--icon-folder) center/contain no-repeat; mask: var(--icon-folder) center/contain no-repeat; }
+
+.filecard {
+  display: flex; align-items: baseline; gap: .65rem; flex-wrap: wrap;
+  padding: .55rem .7rem; border: 1px solid var(--border); border-radius: var(--radius-sm);
+  background: var(--bg-alt); margin: .4rem 0;
+}
+.filecard .filecard-desc { color: var(--text-soft); font-size: .92rem; }
+.filelist { display: flex; flex-direction: column; gap: .35rem; margin: .75rem 0; }
+
+/* ---- Inline code & code blocks ------------------------------------------ */
+:not(pre) > code {
+  font-family: var(--mono); font-size: .86em;
+  background: var(--panel-alt); border: 1px solid var(--border);
+  border-radius: 5px; padding: .08em .4em; color: var(--code-text);
+}
+figure.code {
+  margin: 1rem 0; border: 1px solid var(--code-border); border-radius: var(--radius-sm);
+  overflow: hidden; background: var(--code-bg);
+}
+figure.code figcaption {
+  display: flex; align-items: center; gap: .5rem;
+  padding: .5rem .85rem; font-family: var(--mono); font-size: .76rem; font-weight: 600;
+  color: var(--muted); background: var(--panel-alt); border-bottom: 1px solid var(--code-border);
+}
+figure.code figcaption .lang {
+  margin-left: auto; text-transform: uppercase; letter-spacing: .06em; font-size: .68rem;
+}
+figure.code pre { margin: 0; padding: .9rem 1rem; overflow-x: auto; }
+figure.code code { font-family: var(--mono); font-size: .82rem; line-height: 1.6; color: var(--code-text); background: none; border: none; padding: 0; }
+.code-copy {
+  position: absolute; top: .4rem; right: .4rem; opacity: 0; transition: opacity .15s;
+}
+figure.code { position: relative; }
+figure.code:hover .code-copy { opacity: 1; }
+
+/* ---- Callouts ----------------------------------------------------------- */
+.callout {
+  display: grid; grid-template-columns: auto 1fr; gap: .25rem .75rem;
+  padding: .85rem 1rem; border-radius: var(--radius-sm); margin: 1rem 0;
+  border: 1px solid; border-left-width: 4px;
+}
+.callout .callout-title { font-weight: 700; font-size: .9rem; grid-column: 2; }
+.callout .callout-body { grid-column: 2; }
+.callout .callout-body > :last-child { margin-bottom: 0; }
+.callout::before {
+  content: ""; grid-row: 1 / span 2; width: 18px; height: 18px; margin-top: .15rem;
+  background: currentColor;
+  -webkit-mask-size: contain; mask-size: contain;
+  -webkit-mask-repeat: no-repeat; mask-repeat: no-repeat;
+}
+.callout.note  { background: var(--note-bg); border-color: var(--note-border); color: var(--note-text); }
+.callout.tip   { background: var(--tip-bg);  border-color: var(--tip-border);  color: var(--tip-text); }
+.callout.warn  { background: var(--warn-bg); border-color: var(--warn-border); color: var(--warn-text); }
+.callout.key   { background: var(--key-bg);  border-color: var(--key-border);  color: var(--key-text); }
+.callout.danger{ background: var(--danger-bg); border-color: var(--danger-border); color: var(--danger-text); }
+.callout.note::before  { -webkit-mask: var(--icon-info) center/contain no-repeat; mask: var(--icon-info) center/contain no-repeat; }
+.callout.tip::before   { -webkit-mask: var(--icon-bulb) center/contain no-repeat; mask: var(--icon-bulb) center/contain no-repeat; }
+.callout.warn::before  { -webkit-mask: var(--icon-warn) center/contain no-repeat; mask: var(--icon-warn) center/contain no-repeat; }
+.callout.key::before   { -webkit-mask: var(--icon-key) center/contain no-repeat; mask: var(--icon-key) center/contain no-repeat; }
+.callout.danger::before{ -webkit-mask: var(--icon-warn) center/contain no-repeat; mask: var(--icon-warn) center/contain no-repeat; }
+.callout .callout-body code { background: color-mix(in srgb, currentColor 12%, transparent); border-color: transparent; color: inherit; }
+
+/* ---- Tables ------------------------------------------------------------- */
+.table-wrap { overflow-x: auto; margin: 1rem 0; border: 1px solid var(--border); border-radius: var(--radius-sm); }
+table.doc-table { width: 100%; border-collapse: collapse; font-size: .9rem; }
+table.doc-table th, table.doc-table td { padding: .6rem .8rem; text-align: left; border-bottom: 1px solid var(--border); vertical-align: top; }
+table.doc-table thead th { background: var(--panel-alt); font-weight: 700; font-size: .78rem; text-transform: uppercase; letter-spacing: .04em; color: var(--muted); position: sticky; top: 0; }
+table.doc-table tbody tr:last-child td { border-bottom: none; }
+table.doc-table tbody tr:hover { background: var(--bg-alt); }
+table.doc-table code { white-space: nowrap; }
+
+/* ---- Definition lists --------------------------------------------------- */
+dl.doc-dl { margin: 1rem 0; display: grid; grid-template-columns: minmax(140px, 220px) 1fr; gap: .1rem 1rem; }
+dl.doc-dl dt { font-weight: 700; color: var(--text); padding: .4rem 0; border-top: 1px solid var(--border); }
+dl.doc-dl dd { margin: 0; padding: .4rem 0; color: var(--text-soft); border-top: 1px solid var(--border); }
+dl.doc-dl dt:first-of-type, dl.doc-dl dd:first-of-type { border-top: none; }
+@media (max-width: 620px) { dl.doc-dl { grid-template-columns: 1fr; } dl.doc-dl dd { padding-top: 0; border-top: none; } }
+
+/* ---- Tech-stack cards --------------------------------------------------- */
+.stack-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: .85rem; margin: 1rem 0; }
+.stack-card {
+  border: 1px solid var(--border); border-radius: var(--radius-sm); background: var(--bg-alt);
+  padding: .85rem .95rem; display: flex; flex-direction: column; gap: .35rem;
+}
+.stack-card .stack-head { display: flex; align-items: baseline; gap: .5rem; }
+.stack-card .stack-name { font-weight: 700; font-size: 1rem; }
+.stack-card .stack-ver { font-family: var(--mono); font-size: .76rem; color: var(--accent-text); background: var(--accent-soft); border: 1px solid var(--accent-border); border-radius: 5px; padding: .05rem .4rem; }
+.stack-card .stack-why { font-size: .87rem; color: var(--text-soft); }
+.stack-card .stack-foot { margin-top: auto; }
+
+/* ---- Step list ---------------------------------------------------------- */
+ol.steps { counter-reset: step; list-style: none; padding: 0; margin: 1rem 0; }
+ol.steps > li {
+  position: relative; padding: .15rem 0 .9rem 2.4rem; margin: 0;
+  border-left: 2px solid var(--border); margin-left: .9rem;
+}
+ol.steps > li:last-child { border-left-color: transparent; }
+ol.steps > li::before {
+  counter-increment: step; content: counter(step);
+  position: absolute; left: -.95rem; top: 0;
+  width: 1.8rem; height: 1.8rem; border-radius: 50%;
+  background: var(--accent); color: #fff; font-weight: 700; font-size: .85rem;
+  display: flex; align-items: center; justify-content: center;
+}
+
+/* ---- Pipeline / flow chips ---------------------------------------------- */
+.flow { display: flex; flex-wrap: wrap; align-items: center; gap: .35rem; margin: 1rem 0; }
+.flow .node { padding: .35rem .7rem; border: 1px solid var(--accent-border); background: var(--accent-soft); color: var(--accent-text); border-radius: var(--radius-sm); font-weight: 600; font-size: .85rem; }
+.flow .arrow { color: var(--muted); font-weight: 700; }
+
+/* ---- Diagram (mermaid) -------------------------------------------------- */
+figure.diagram { margin: 1.25rem 0; border: 1px solid var(--border); border-radius: var(--radius-sm); background: var(--panel); padding: 1rem; overflow-x: auto; text-align: center; }
+figure.diagram figcaption { margin-top: .6rem; font-size: .82rem; color: var(--muted); text-align: center; }
+figure.diagram .mermaid { display: flex; justify-content: center; }
+.mermaid-fallback { display: none; }
+figure.diagram.failed .mermaid { display: none; }
+figure.diagram.failed .mermaid-fallback { display: block; text-align: left; }
+
+/* ---- Misc --------------------------------------------------------------- */
+.tag-list { display: flex; flex-wrap: wrap; gap: .4rem; margin: .5rem 0; }
+.tag { font-size: .76rem; padding: .15rem .5rem; border-radius: 999px; background: var(--panel-alt); border: 1px solid var(--border); color: var(--text-soft); font-family: var(--mono); }
+
+.lead-in { font-size: 1rem; color: var(--text-soft); border-left: 3px solid var(--accent); padding-left: .9rem; margin: 0 0 1.25rem; }
+
+ul.clean { list-style: none; padding-left: 0; }
+ul.clean > li { position: relative; padding-left: 1.4rem; margin: .35rem 0; }
+ul.clean > li::before { content: ""; position: absolute; left: .2rem; top: .55em; width: .4rem; height: .4rem; border-radius: 50%; background: var(--accent); }
+
+.content-section h3 { margin-top: 1.5rem; font-size: 1.05rem; }
+.sec-body h3 { margin-top: 1.6rem; font-size: 1.08rem; padding-bottom: .3rem; border-bottom: 1px solid var(--border); }
+.sec-body h4 { margin-top: 1.2rem; font-size: .96rem; }
+
+mark.hl { background: #fde68a; color: #78350f; border-radius: 3px; padding: 0 .1em; }
+:root[data-theme="dark"] mark.hl { background: #92400e; color: #fde68a; }
+
+.filtered-out { display: none !important; }
+
+/* ---- Back to top -------------------------------------------------------- */
+#backTop {
+  position: fixed; right: 1.25rem; bottom: 1.25rem; z-index: 800;
+  width: 44px; height: 44px; border-radius: 50%; border: 1px solid var(--border-strong);
+  background: var(--panel); color: var(--text-soft); cursor: pointer; box-shadow: var(--shadow-lg);
+  display: flex; align-items: center; justify-content: center;
+  opacity: 0; transform: translateY(10px); pointer-events: none; transition: opacity .2s, transform .2s;
+}
+#backTop.show { opacity: 1; transform: translateY(0); pointer-events: auto; }
+#backTop:hover { color: var(--accent-text); border-color: var(--accent); }
+#backTop .ico { width: 20px; height: 20px; background: currentColor; -webkit-mask: var(--icon-up) center/contain no-repeat; mask: var(--icon-up) center/contain no-repeat; }
+
+/* ---- Footer ------------------------------------------------------------- */
+.doc-footer {
+  border-top: 1px solid var(--border); margin-top: 2rem; padding: 1.5rem 2.5rem;
+  color: var(--muted); font-size: .84rem; max-width: 1400px; margin-left: auto; margin-right: auto;
+}
+.doc-footer code { font-size: .8em; }
+
+/* ---- Icons (data-URI masks; monochrome, themeable via currentColor) ----- */
+:root {
+  --icon-search: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="black" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>');
+  --icon-chevron: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="black" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg>');
+  --icon-file: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="black" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/></svg>');
+  --icon-folder: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="black" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20h16a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.93a2 2 0 0 1-1.66-.9l-.82-1.2A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13c0 1.1.9 2 2 2Z"/></svg>');
+  --icon-info: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="black" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/></svg>');
+  --icon-bulb: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="black" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18h6M10 22h4M15.09 14c.18-.79.62-1.42 1.27-2A4.5 4.5 0 1 0 7.64 12c.65.58 1.09 1.21 1.27 2"/></svg>');
+  --icon-warn: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="black" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><path d="M12 9v4M12 17h.01"/></svg>');
+  --icon-key: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="black" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="7.5" cy="15.5" r="5.5"/><path d="m21 2-9.6 9.6M15.5 7.5l3 3L22 7l-3-3"/></svg>');
+  --icon-up: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="black" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m18 15-6-6-6 6"/></svg>');
+  --icon-expand: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="black" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m7 15 5 5 5-5M7 9l5-5 5 5"/></svg>');
+  --icon-collapse: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="black" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m7 20 5-5 5 5M7 4l5 5 5-5"/></svg>');
+  --icon-sun: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="black" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"/></svg>');
+  --icon-moon: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="black" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/></svg>');
+  --icon-print: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="black" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9V2h12v7M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2M6 14h12v8H6z"/></svg>');
+  --icon-copy: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="black" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="14" height="14" x="8" y="8" rx="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg>');
+}
+
+/* ---- Print -------------------------------------------------------------- */
+@media print {
+  .doc-header, .doc-toc, #backTop, #scrollProgress, .code-copy { display: none !important; }
+  .doc-layout { grid-template-columns: 1fr; }
+  .doc-content { padding: 0; }
+  .doc-section > details { box-shadow: none; border-color: #ccc; break-inside: avoid; }
+  body { background: #fff; }
+  a { color: inherit; }
+}
+
+/* ---- Index hub (DOCUMENTATION_INDEX.html) ------------------------------- */
+.index-wrap { max-width: 1180px; margin: 0 auto; padding: 2.5rem 2rem 5rem; }
+.index-hero { margin-bottom: 2rem; }
+.index-hero h1 { font-size: 2.3rem; margin: 0 0 .5rem; letter-spacing: -.02em; }
+.index-hero .lede { font-size: 1.15rem; color: var(--text-soft); margin: 0; max-width: 70ch; }
+.index-stats { display: flex; gap: 1.5rem; flex-wrap: wrap; margin-top: 1.25rem; }
+.index-stats .stat { display: flex; flex-direction: column; }
+.index-stats .stat .num { font-size: 1.7rem; font-weight: 800; color: var(--accent-text); line-height: 1; }
+.index-stats .stat .lbl { font-size: .72rem; text-transform: uppercase; letter-spacing: .08em; color: var(--muted); font-weight: 700; margin-top: .3rem; }
+.index-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(330px, 1fr)); gap: 1rem; margin: 1.75rem 0 0; }
+a.index-card { text-decoration: none; color: inherit; border: 1px solid var(--border); border-radius: var(--radius); background: var(--panel); padding: 1.15rem 1.25rem; display: flex; flex-direction: column; gap: .55rem; box-shadow: var(--shadow); transition: transform .12s, box-shadow .12s, border-color .12s; }
+a.index-card:hover { transform: translateY(-2px); box-shadow: var(--shadow-lg); border-color: var(--accent); text-decoration: none; }
+a.index-card .ic-title { font-size: 1.12rem; font-weight: 700; color: var(--text); font-family: var(--mono); }
+a.index-card .ic-desc { font-size: .9rem; color: var(--text-soft); line-height: 1.5; flex: 1 1 auto; }
+a.index-card .ic-badges { display: flex; flex-wrap: wrap; gap: .35rem; }
+a.index-card .ic-open { margin-top: .35rem; font-size: .8rem; font-weight: 700; color: var(--accent-text); display: inline-flex; align-items: center; gap: .3rem; }
+a.index-card .ic-open::after { content: "→"; transition: transform .12s; }
+a.index-card:hover .ic-open::after { transform: translateX(3px); }
+@media (max-width: 560px) { .index-wrap { padding: 1.5rem 1rem 3rem; } .index-grid { grid-template-columns: 1fr; } }
+
+  </style>
+</head>
+<body>
+  <div id="scrollProgress"></div>
+
+  <header class="doc-header">
+    <div class="brand">
+      <span class="kicker">Project Guide</span>
+      <span class="title">blockchain</span>
+    </div>
+    <div class="spacer"></div>
+    <div class="doc-search">
+      <input id="docSearch" type="search" placeholder="Search this guide…" aria-label="Search documentation">
+      <span class="search-count"></span>
+    </div>
+    <div class="btn-group">
+      <button class="btn" id="expandAll" title="Expand all sections"><span class="ico" style="-webkit-mask:var(--icon-expand) center/contain no-repeat;mask:var(--icon-expand) center/contain no-repeat"></span><span class="label">Expand</span></button>
+      <button class="btn" id="collapseAll" title="Collapse all sections"><span class="ico" style="-webkit-mask:var(--icon-collapse) center/contain no-repeat;mask:var(--icon-collapse) center/contain no-repeat"></span><span class="label">Collapse</span></button>
+      <button class="btn" id="themeToggle" title="Toggle light / dark"><span class="ico"></span></button>
+      <button class="btn" id="printBtn" title="Print / Save as PDF"><span class="ico" style="-webkit-mask:var(--icon-print) center/contain no-repeat;mask:var(--icon-print) center/contain no-repeat"></span></button>
+    </div>
+  </header>
+
+  <div class="doc-layout">
+    <nav class="doc-toc" id="docToc"><div class="toc-title">Contents</div></nav>
+
+    <main class="doc-content">
+      <div class="doc-content-inner">
+
+        <section class="doc-hero">
+          <h1>blockchain</h1>
+          <p class="lede">An educational, learning-by-building project: a from-scratch Python Bitcoin wallet (key generation, address derivation, transaction lifecycle over Bitcoin Core RPC), studied alongside a read-only Bitcoin Core C++ reference.</p>
+          <div class="badge-row">
+            <span class="badge accent">Python CLI / library</span>
+            <span class="badge green">Phase 1 · in progress</span>
+            <span class="badge purple">ECDSA secp256k1 · Base58Check</span>
+            <span class="badge">v0.1.0</span>
+            <span class="badge">Educational — not for real funds</span>
+          </div>
+          <div class="meta-grid">
+            <div class="meta-item"><div class="meta-k">Stack</div><div class="meta-v">Python 3.13 · ecdsa · base58 · python-bitcoinrpc</div></div>
+            <div class="meta-item"><div class="meta-k">Entry point</div><div class="meta-v">bitcoin_wallet.py</div></div>
+            <div class="meta-item"><div class="meta-k">External dependency</div><div class="meta-v">Bitcoin Core node (RPC :8332)</div></div>
+            <div class="meta-item"><div class="meta-k">Lint / CI</div><div class="meta-v">ruff · GitHub Actions</div></div>
+            <div class="meta-item"><div class="meta-k">Tests</div><div class="meta-v">None yet (planned)</div></div>
+            <div class="meta-item"><div class="meta-k">Status</div><div class="meta-v">Single working module, hardening pending</div></div>
+          </div>
+        </section>
+
+        <section class="doc-section" id="overview">
+          <details open>
+            <summary><span class="sec-num">1</span><h2>Overview — what this is &amp; why</h2><span class="chevron"></span></summary>
+            <div class="sec-body">
+              <p class="lead-in">A personal learning project for understanding Bitcoin internals by reading the reference implementation and re-implementing wallet mechanics in Python.</p>
+
+              <p>The goal of <strong>blockchain</strong> is to build a deep, hands-on understanding of how cryptocurrency works at the level of bytes and curve points — not to ship a product. The approach is to study the canonical Bitcoin Core C++ source as a reference and re-implement the wallet half from scratch in Python, so that every step from "256 random bits" to "a spendable Bitcoin address" is understood and owned. The authoritative statement of intent lives in <code class="fileref" data-path="docs/BLOCKCHAIN_MASTER_PLAN.md">docs/BLOCKCHAIN_MASTER_PLAN.md</code> and the project rules in <code class="fileref" data-path="CLAUDE.md">CLAUDE.md</code> / <code class="fileref" data-path="AGENTS.md">AGENTS.md</code>.</p>
+
+              <p>Today the project is a <strong>single Python module</strong>, <code class="fileref" data-path="bitcoin_wallet.py">bitcoin_wallet.py</code>, containing one class, <code>BitcoinWallet</code>. It does the full cryptographic key-to-address derivation locally (random private key → compressed ECDSA public key → P2PKH Base58Check address) and then delegates all on-chain operations — balance, transaction construction, signing, broadcast — to a locally running Bitcoin Core node over JSON-RPC. The crypto is real; the chain interaction is real (against whatever node you point it at). What is <em>not</em> real is production-grade safety: see the warnings throughout this guide.</p>
+
+              <p>The project is explicitly <strong>phased</strong> (Phase 1: wallet basics → Phase 2: HD/BIP wallets, SegWit, multi-sig → Phase 3: a custom educational blockchain with PoW and P2P). Only Phase 1 has code, and even Phase 1 is mid-hardening: type annotations are present but docstrings, named constants, a pytest suite with test vectors, and edge-case handling are still on the to-do list per <code class="fileref" data-path="docs/status.md">docs/status.md</code>.</p>
+
+              <div class="callout danger"><div class="callout-title">Do not</div><div class="callout-body">Never store real funds with this code. The entropy mixing, the lack of key encryption at rest, the plaintext private key in memory and in RPC calls, and the hard-coded fee all make this unsafe for mainnet value. It is a study tool. <code class="fileref" data-path="CLAUDE.md">CLAUDE.md</code> section 0 says this in the strongest terms.</div></div>
+
+              <div class="callout warn"><div class="callout-title">Documentation drift — read this first</div><div class="callout-body">The project docs (<code class="fileref" data-path="CLAUDE.md">CLAUDE.md</code>, <code class="fileref" data-path="AGENTS.md">AGENTS.md</code>, <code class="fileref" data-path="README.md">README.md</code>, <code class="fileref" data-path="docs/status.md">docs/status.md</code>) describe a nested layout: <code>blockchain_dev/bitcoin_wallet_dev/bitcoin_wallet.py</code> for the wallet and <code>blockchain_dev/bitcoin_blockchain_dev/</code> for a Bitcoin Core clone, plus a <code>.claude/</code> directory. <strong>None of those exist on disk.</strong> The wallet actually lives at the repo root as <code class="fileref" data-path="bitcoin_wallet.py">bitcoin_wallet.py</code>, there is no Bitcoin Core clone checked out (it is gitignored and absent), and the agent wiring is under <code class="fileref dir" data-path=".codex/">.codex/</code> + <code class="fileref dir" data-path=".agents/">.agents/</code>, not <code>.claude/</code>. This guide documents the <em>real</em> on-disk state and flags the drift wherever it matters.</div></div>
+            </div>
+          </details>
+        </section>
+
+        <section class="doc-section" id="status">
+          <details>
+            <summary><span class="sec-num">2</span><h2>Status &amp; at a glance</h2><span class="chevron"></span></summary>
+            <div class="sec-body">
+              <p class="lead-in">Where the project actually is today, what works, and what is still a to-do.</p>
+
+              <div class="meta-grid">
+                <div class="meta-item"><div class="meta-k">Phase</div><div class="meta-v">1 — Python wallet basics</div></div>
+                <div class="meta-item"><div class="meta-k">Version</div><div class="meta-v">0.1.0</div></div>
+                <div class="meta-item"><div class="meta-k">Source of version truth</div><div class="meta-v">pyproject.toml [project].version</div></div>
+                <div class="meta-item"><div class="meta-k">Lines of wallet code</div><div class="meta-v">~199 (single file)</div></div>
+              </div>
+
+              <h3 class="anchor">What works today</h3>
+              <div class="table-wrap"><table class="doc-table">
+                <thead><tr><th>Capability</th><th>State</th><th>Where</th></tr></thead>
+                <tbody>
+                  <tr><td>Private key generation (256-bit, mixed entropy)</td><td>Works</td><td><code>generate_private_key()</code></td></tr>
+                  <tr><td>Compressed public key derivation (secp256k1)</td><td>Works</td><td><code>derive_public_key()</code></td></tr>
+                  <tr><td>P2PKH Base58Check address generation</td><td>Works</td><td><code>generate_address()</code></td></tr>
+                  <tr><td>RPC credential auto-gen + persist</td><td>Works</td><td><code>get_rpc_credentials()</code></td></tr>
+                  <tr><td>Balance via UTXO query (RPC)</td><td>Works (needs node)</td><td><code>get_balance()</code></td></tr>
+                  <tr><td>Raw tx create / sign / broadcast (RPC)</td><td>Works (needs node)</td><td>tx methods</td></tr>
+                  <tr><td>High-level send with change calc</td><td>Works (needs node)</td><td><code>create_and_send_transaction()</code></td></tr>
+                </tbody>
+              </table></div>
+
+              <h3 class="anchor">What is missing (Phase 1 remaining)</h3>
+              <p>Per <code class="fileref" data-path="docs/status.md">docs/status.md</code> and the Phase 1 gate in <code class="fileref" data-path="CLAUDE.md">CLAUDE.md</code> section 10:</p>
+              <ul>
+                <li>Docstrings on every method (currently only inline comments).</li>
+                <li>Named constants — the network byte <code>0x00</code> and the fee <code>0.0001</code> are still inline literals.</li>
+                <li>A <code>pytest</code> suite with known Bitcoin test vectors. <strong>No tests exist at all yet.</strong></li>
+                <li>Edge-case handling (invalid addresses, RPC connection failures beyond the current per-call try/except).</li>
+                <li>Runtime dependencies declared in <code class="fileref" data-path="pyproject.toml">pyproject.toml</code> — currently the <code>[project]</code> table has no <code>dependencies</code> array, so <code>ecdsa</code>, <code>base58</code>, and <code>python-bitcoinrpc</code> are imported but not pinned.</li>
+              </ul>
+
+              <div class="callout note"><div class="callout-title">Note</div><div class="callout-body"><code class="fileref" data-path="docs/status.md">docs/status.md</code> still points at the old <code>blockchain_dev/bitcoin_wallet_dev/</code> path. Treat that file's file paths as stale; its task list is still accurate.</div></div>
+            </div>
+          </details>
+        </section>
+
+        <section class="doc-section" id="tech-stack">
+          <details>
+            <summary><span class="sec-num">3</span><h2>Tech stack</h2><span class="chevron"></span></summary>
+            <div class="sec-body">
+              <p class="lead-in">A deliberately small, audited-library stack. The rule (per <code class="fileref" data-path="CLAUDE.md">CLAUDE.md</code> section 3) is: never roll custom cryptography.</p>
+
+              <div class="stack-grid">
+                <div class="stack-card">
+                  <div class="stack-head"><span class="stack-name">Python</span><span class="stack-ver">3.13+</span></div>
+                  <div class="stack-why">Educational clarity and a rich crypto ecosystem. <code>requires-python = "&gt;=3.13"</code> in the manifest; ruff targets <code>py313</code>.</div>
+                  <div class="stack-foot"><code class="fileref" data-path="pyproject.toml">pyproject.toml</code></div>
+                </div>
+                <div class="stack-card">
+                  <div class="stack-head"><span class="stack-name">ecdsa</span><span class="stack-ver">&gt;=0.18</span></div>
+                  <div class="stack-why">Pure-Python ECDSA with secp256k1 support; used for the SigningKey → VerifyingKey derivation. Pinned in <code class="fileref" data-path="CLAUDE.md">CLAUDE.md</code> but not yet in the manifest.</div>
+                  <div class="stack-foot"><code class="fileref" data-path="bitcoin_wallet.py">bitcoin_wallet.py</code></div>
+                </div>
+                <div class="stack-card">
+                  <div class="stack-head"><span class="stack-name">base58</span><span class="stack-ver">&gt;=2.1</span></div>
+                  <div class="stack-why">Correct, lightweight Base58Check encoding for the final address string. Hand-rolling Base58 is explicitly forbidden.</div>
+                  <div class="stack-foot"><code class="fileref" data-path="bitcoin_wallet.py">bitcoin_wallet.py</code></div>
+                </div>
+                <div class="stack-card">
+                  <div class="stack-head"><span class="stack-name">python-bitcoinrpc</span><span class="stack-ver">&gt;=1.0</span></div>
+                  <div class="stack-why">Provides <code>AuthServiceProxy</code> + <code>JSONRPCException</code> — the standard Bitcoin Core JSON-RPC client. All on-chain operations go through it.</div>
+                  <div class="stack-foot"><code class="fileref" data-path="bitcoin_wallet.py">bitcoin_wallet.py</code></div>
+                </div>
+                <div class="stack-card">
+                  <div class="stack-head"><span class="stack-name">hashlib / secrets / os / random</span><span class="stack-ver">stdlib</span></div>
+                  <div class="stack-why">SHA-256, RIPEMD-160, CSPRNG entropy (<code>secrets.token_bytes</code>, <code>os.urandom</code>) and the (educational-only) <code>random.getrandbits</code> mixing.</div>
+                  <div class="stack-foot"><code class="fileref" data-path="bitcoin_wallet.py">bitcoin_wallet.py</code></div>
+                </div>
+                <div class="stack-card">
+                  <div class="stack-head"><span class="stack-name">ruff</span><span class="stack-ver">configured</span></div>
+                  <div class="stack-why">Lint + format. Rules <code>E, F, I, N, UP, ANN</code> at <code>line-length = 120</code>. The only CI gate today.</div>
+                  <div class="stack-foot"><code class="fileref" data-path="pyproject.toml">pyproject.toml</code></div>
+                </div>
+                <div class="stack-card">
+                  <div class="stack-head"><span class="stack-name">uv</span><span class="stack-ver">lockfile present</span></div>
+                  <div class="stack-why">Package/venv manager. <code class="fileref" data-path="uv.lock">uv.lock</code> exists but currently locks zero third-party packages — the project is a "virtual" package with no declared deps.</div>
+                  <div class="stack-foot"><code class="fileref" data-path="uv.lock">uv.lock</code></div>
+                </div>
+                <div class="stack-card">
+                  <div class="stack-head"><span class="stack-name">pytest + pytest-cov</span><span class="stack-ver">planned</span></div>
+                  <div class="stack-why">The intended test stack (100% coverage target). No test files or config exist yet.</div>
+                  <div class="stack-foot"><code class="fileref" data-path="docs/BLOCKCHAIN_MASTER_PLAN.md">docs/BLOCKCHAIN_MASTER_PLAN.md</code></div>
+                </div>
+              </div>
+
+              <div class="callout warn"><div class="callout-title">Watch out — dependencies not declared</div><div class="callout-body"><code class="fileref" data-path="pyproject.toml">pyproject.toml</code> defines no <code>dependencies</code>, and <code class="fileref" data-path="uv.lock">uv.lock</code> confirms it (only the virtual <code>blockchain</code> package, no <code>ecdsa</code>/<code>base58</code>/<code>bitcoinrpc</code>). The module will <code>ImportError</code> on a clean machine until you <code>uv add ecdsa base58 python-bitcoinrpc</code> or <code>pip install</code> them manually. This is the single biggest "it won't run for me" gotcha.</div></div>
+            </div>
+          </details>
+        </section>
+
+        <section class="doc-section" id="architecture">
+          <details>
+            <summary><span class="sec-num">4</span><h2>Architecture</h2><span class="chevron"></span></summary>
+            <div class="sec-body">
+              <p class="lead-in">A clean split: cryptography is done locally in Python; everything that touches the chain is delegated to a Bitcoin Core node over JSON-RPC.</p>
+
+              <p>There is exactly one process: your Python script. It holds the key material in memory and computes the address itself. For any operation that needs chain state — listing UTXOs, building/signing/broadcasting a transaction — it opens an HTTP JSON-RPC connection to a Bitcoin Core node (default <code>127.0.0.1:8332</code>) and asks the node to do the work. The node, not this code, owns the mempool, the UTXO set, and the network.</p>
+
+              <figure class="diagram">
+                <div class="mermaid">
+graph TD
+    subgraph Local["Python process — bitcoin_wallet.py"]
+        ENT[Entropy<br/>secrets + os.urandom + random] --> PK[Private key<br/>256-bit hex]
+        PK --> PUB[Compressed public key<br/>ecdsa secp256k1]
+        PUB --> ADDR[P2PKH address<br/>SHA256 then RIPEMD160 then Base58Check]
+        CRED[RPC credentials<br/>JSON file] --> PROXY[AuthServiceProxy]
+    end
+    subgraph Node["Bitcoin Core node"]
+        RPC[JSON-RPC :8332]
+        UTXO[(UTXO set)]
+        MEM[(Mempool)]
+    end
+    ADDR -->|address arg| PROXY
+    PK -->|sign key| PROXY
+    PROXY -->|listunspent| RPC
+    PROXY -->|createrawtransaction| RPC
+    PROXY -->|signrawtransactionwithkey| RPC
+    PROXY -->|sendrawtransaction| RPC
+    RPC --> UTXO
+    RPC --> MEM
+                </div>
+                <div class="mermaid-fallback"><figure class="code"><figcaption>diagram source · mermaid</figcaption><pre><code>graph TD
+    subgraph Local["Python process — bitcoin_wallet.py"]
+        ENT[Entropy: secrets + os.urandom + random] --&gt; PK[Private key 256-bit hex]
+        PK --&gt; PUB[Compressed public key ecdsa secp256k1]
+        PUB --&gt; ADDR[P2PKH address SHA256 then RIPEMD160 then Base58Check]
+        CRED[RPC credentials JSON file] --&gt; PROXY[AuthServiceProxy]
+    end
+    subgraph Node["Bitcoin Core node"]
+        RPC[JSON-RPC :8332]
+        UTXO[(UTXO set)]
+        MEM[(Mempool)]
+    end
+    ADDR --&gt;|address arg| PROXY
+    PK --&gt;|sign key| PROXY
+    PROXY --&gt;|listunspent| RPC
+    PROXY --&gt;|createrawtransaction| RPC
+    PROXY --&gt;|signrawtransactionwithkey| RPC
+    PROXY --&gt;|sendrawtransaction| RPC
+    RPC --&gt; UTXO
+    RPC --&gt; MEM</code></pre></figure></div>
+                <figcaption>Component topology — local crypto vs. delegated chain operations.</figcaption>
+              </figure>
+
+              <h3 class="anchor">The send flow (end to end)</h3>
+              <p>The highest-level method, <code>create_and_send_transaction()</code>, chains five RPC-backed steps. The sequence below shows exactly who does what.</p>
+
+              <figure class="diagram">
+                <div class="mermaid">
+sequenceDiagram
+    participant U as Caller / __main__
+    participant W as BitcoinWallet
+    participant N as Bitcoin Core RPC
+    U->>W: create_and_send_transaction(recipient, amount)
+    W->>N: listunspent(0, 9999999, [address])
+    N-->>W: UTXOs
+    W->>W: accumulate inputs until total >= amount
+    W->>W: change = total - amount - 0.0001
+    W->>N: createrawtransaction(inputs, outputs)
+    N-->>W: raw_tx hex
+    W->>N: signrawtransactionwithkey(raw_tx, [private_key])
+    N-->>W: signed hex
+    W->>N: sendrawtransaction(signed)
+    N-->>W: txid
+    W-->>U: prints "broadcasted ... TXID"
+                </div>
+                <div class="mermaid-fallback"><figure class="code"><figcaption>diagram source · mermaid</figcaption><pre><code>sequenceDiagram
+    participant U as Caller / __main__
+    participant W as BitcoinWallet
+    participant N as Bitcoin Core RPC
+    U-&gt;&gt;W: create_and_send_transaction(recipient, amount)
+    W-&gt;&gt;N: listunspent(0, 9999999, [address])
+    N--&gt;&gt;W: UTXOs
+    W-&gt;&gt;W: accumulate inputs until total &gt;= amount
+    W-&gt;&gt;W: change = total - amount - 0.0001
+    W-&gt;&gt;N: createrawtransaction(inputs, outputs)
+    N--&gt;&gt;W: raw_tx hex
+    W-&gt;&gt;N: signrawtransactionwithkey(raw_tx, [private_key])
+    N--&gt;&gt;W: signed hex
+    W-&gt;&gt;N: sendrawtransaction(signed)
+    N--&gt;&gt;W: txid
+    W--&gt;&gt;U: prints "broadcasted ... TXID"</code></pre></figure></div>
+                <figcaption>create_and_send_transaction — UTXO selection through broadcast.</figcaption>
+              </figure>
+
+              <div class="callout key"><div class="callout-title">Key concept</div><div class="callout-body">The wallet derives its address from a public key it computes itself, but it asks Bitcoin Core to <em>sign</em> with the raw private key via <code>signrawtransactionwithkey</code>. The node never imports or stores the key; it is passed per call. That keeps the cryptographic ownership in Python while leveraging the node for serialization and consensus-correct signing.</div></div>
+
+              <div class="callout warn"><div class="callout-title">Watch out — the reference half is not on disk</div><div class="callout-body">The architecture in <code class="fileref" data-path="docs/BLOCKCHAIN_MASTER_PLAN.md">docs/BLOCKCHAIN_MASTER_PLAN.md</code> shows a "Bitcoin Core source (C++ reference, READ-ONLY)" component feeding study of the wallet. That clone is intended to live at <code>blockchain_dev/bitcoin_blockchain_dev/</code> and is gitignored, but it is <strong>not currently checked out</strong> in this working tree. The READ-ONLY contract still applies the moment you clone it.</div></div>
+            </div>
+          </details>
+        </section>
+
+        <section class="doc-section" id="structure">
+          <details>
+            <summary><span class="sec-num">5</span><h2>Directory structure</h2><span class="chevron"></span></summary>
+            <div class="sec-body">
+              <p class="lead-in">The real, on-disk layout (verified). Compare with the aspirational layout in the docs, which is flagged below.</p>
+
+              <div class="filelist">
+                <div class="filecard"><code class="fileref" data-path="bitcoin_wallet.py">bitcoin_wallet.py</code><span class="filecard-desc">The entire wallet. One class <code>BitcoinWallet</code> + a <code>__main__</code> demo block. The heart of the project.</span></div>
+                <div class="filecard"><code class="fileref" data-path="pyproject.toml">pyproject.toml</code><span class="filecard-desc">Project metadata, Python version pin (3.13), ruff config. Version source of truth. No runtime deps declared yet.</span></div>
+                <div class="filecard"><code class="fileref" data-path="uv.lock">uv.lock</code><span class="filecard-desc">uv lockfile. Locks the virtual project only — no third-party packages.</span></div>
+                <div class="filecard"><code class="fileref" data-path="CLAUDE.md">CLAUDE.md</code><span class="filecard-desc">AI/dev guidelines for Claude: phase constraints, crypto rules, READ-ONLY reference contract, completion gate.</span></div>
+                <div class="filecard"><code class="fileref" data-path="AGENTS.md">AGENTS.md</code><span class="filecard-desc">Identical guidelines for the Codex agent (the "AGENTS.md" twin of CLAUDE.md).</span></div>
+                <div class="filecard"><code class="fileref" data-path="README.md">README.md</code><span class="filecard-desc">Human-facing overview: structure, architecture diagram, phase roadmap, run instructions, crypto flow.</span></div>
+                <div class="filecard"><code class="fileref dir" data-path="docs/">docs/</code><span class="filecard-desc">Master plan + live state + changelog.</span></div>
+                <div class="filecard"><code class="fileref" data-path="docs/BLOCKCHAIN_MASTER_PLAN.md">docs/BLOCKCHAIN_MASTER_PLAN.md</code><span class="filecard-desc">Authoritative plan: vision, 3-phase roadmap, per-phase goals + gate criteria, cross-phase crypto primitives, tech decisions.</span></div>
+                <div class="filecard"><code class="fileref" data-path="docs/status.md">docs/status.md</code><span class="filecard-desc">Current state / what exists / what's missing / next steps. (Paths inside are stale.)</span></div>
+                <div class="filecard"><code class="fileref" data-path="docs/versions.md">docs/versions.md</code><span class="filecard-desc">Semver changelog. Newest at top; currently just v0.1.0.</span></div>
+                <div class="filecard"><code class="fileref dir" data-path=".codex/">.codex/</code><span class="filecard-desc">Codex agent wiring: hooks config + slash commands.</span></div>
+                <div class="filecard"><code class="fileref" data-path=".codex/hooks.json">.codex/hooks.json</code><span class="filecard-desc">Maps PreToolUse/PostToolUse/Stop events to the Node hook scripts in scripts/hooks/.</span></div>
+                <div class="filecard"><code class="fileref dir" data-path=".codex/commands/">.codex/commands/</code><span class="filecard-desc">Slash commands: review, validate, pre-commit.</span></div>
+                <div class="filecard"><code class="fileref dir" data-path=".agents/">.agents/</code><span class="filecard-desc">Agent skills. Holds the phase-awareness skill.</span></div>
+                <div class="filecard"><code class="fileref" data-path=".agents/skills/phase-awareness/SKILL.md">.agents/skills/phase-awareness/SKILL.md</code><span class="filecard-desc">Proactive skill that orients the agent to the current phase and blocks out-of-scope / read-only-dir edits.</span></div>
+                <div class="filecard"><code class="fileref dir" data-path="scripts/hooks/">scripts/hooks/</code><span class="filecard-desc">OS-agnostic Node (.cjs) hook implementations.</span></div>
+                <div class="filecard"><code class="fileref dir" data-path=".github/workflows/">.github/workflows/</code><span class="filecard-desc">GitHub Actions: ci.yml (lint) + release.yml (manual version bump).</span></div>
+                <div class="filecard"><code class="fileref" data-path="claude-teams.sh">claude-teams.sh</code><span class="filecard-desc">Launcher: enables the experimental Claude Code agent-teams flag, then exec claude.</span></div>
+                <div class="filecard"><code class="fileref" data-path="claude-teams.bat">claude-teams.bat</code><span class="filecard-desc">Windows twin of the above.</span></div>
+                <div class="filecard"><code class="fileref" data-path=".gitignore">.gitignore</code><span class="filecard-desc">Ignores Python/IDE/OS junk, the Bitcoin Core clone dir, rpc_credentials.json, and .claude/ state.</span></div>
+                <div class="filecard"><code class="fileref" data-path=".gitattributes">.gitattributes</code><span class="filecard-desc">Git attributes (line endings / export rules).</span></div>
+              </div>
+
+              <h3 class="anchor">Documented vs. actual layout</h3>
+              <div class="callout note"><div class="callout-title">Note — the layout in the docs is aspirational</div><div class="callout-body">
+                <code class="fileref" data-path="CLAUDE.md">CLAUDE.md</code>/<code class="fileref" data-path="AGENTS.md">AGENTS.md</code> section 4 and <code class="fileref" data-path="README.md">README.md</code> describe:
+                <code>blockchain_dev/bitcoin_wallet_dev/bitcoin_wallet.py</code>, <code>blockchain_dev/bitcoin_blockchain_dev/</code>, and a <code>.claude/</code> dir. On disk the wallet is at the repo root, there is no <code>blockchain_dev/</code> tree, and the agent config is <code>.codex/</code> + <code>.agents/</code>. When the docs say "<code>cd blockchain_dev/bitcoin_wallet_dev</code>", read it as "run from the repo root."
+              </div></div>
+            </div>
+          </details>
+        </section>
+
+        <section class="doc-section" id="modules">
+          <details>
+            <summary><span class="sec-num">6</span><h2>Core module — BitcoinWallet</h2><span class="chevron"></span></summary>
+            <div class="sec-body">
+              <p class="lead-in">One class does everything. Below, each method is broken out with its exact logic, inputs/outputs, and the security caveats that matter.</p>
+
+              <div class="flow"><span class="node">Entropy</span><span class="arrow">→</span><span class="node">Private key</span><span class="arrow">→</span><span class="node">Public key</span><span class="arrow">→</span><span class="node">Address</span><span class="arrow">→</span><span class="node">RPC ops</span></div>
+
+              <details class="sub">
+                <summary>Constructor &amp; wiring <span class="sub-tag">bitcoin_wallet.py:16-36</span></summary>
+                <div class="sub-body">
+                  <p>The constructor takes an optional RPC credentials filename and an optional private key (hex). It loads/creates credentials, opens the RPC connection, then either generates a fresh private key or uses the one provided. From the private key it eagerly derives the public key and address, so <code>self.address</code> is ready immediately after construction.</p>
+                  <figure class="code">
+                    <figcaption>bitcoin_wallet.py · constructor<span class="lang">python</span></figcaption>
+                    <pre><code>def __init__(self, rpc_credentials_file: str = 'rpc_credentials.json',
+             private_key: str | None = None) -&gt; None:
+    self.rpc_credentials = self.get_rpc_credentials(rpc_credentials_file)
+    self.rpc_connection = self.connect_to_rpc()
+    self.private_key = (self.generate_private_key()
+                        if private_key is None else private_key)
+    self.public_key = self.derive_public_key(self.private_key)
+    self.address = self.generate_address(self.public_key)</code></pre>
+                  </figure>
+                  <div class="callout warn"><div class="callout-title">Watch out</div><div class="callout-body">The constructor connects to RPC <em>before</em> deriving keys. <code>AuthServiceProxy</code> is lazy (it does not actually connect until a method is called), so construction succeeds even with no node running — failures surface only when you call <code>get_balance()</code> or a tx method.</div></div>
+                </div>
+              </details>
+
+              <details class="sub">
+                <summary>RPC credentials &amp; connection <span class="sub-tag">bitcoin_wallet.py:38-60</span></summary>
+                <div class="sub-body">
+                  <p><code>get_rpc_credentials()</code> loads <code class="fileref" data-path="bitcoin_wallet.py">rpc_credentials.json</code> if present, otherwise generates a random <code>rpc_user</code>/<code>rpc_password</code> with <code>secrets.token_hex</code> and writes them to disk. <code>connect_to_rpc()</code> builds the URL <code>http://user:pass@127.0.0.1:8332</code> and returns an <code>AuthServiceProxy</code>.</p>
+                  <div class="filelist">
+                    <div class="filecard"><code class="fileref" data-path="bitcoin_wallet.py">bitcoin_wallet.py</code><span class="filecard-desc">get_rpc_credentials (38-54), connect_to_rpc (56-60).</span></div>
+                  </div>
+                  <div class="callout warn"><div class="callout-title">Watch out — credentials must match the node</div><div class="callout-body">Auto-generating credentials only works if your <code>bitcoin.conf</code> already trusts those exact user/password values. In practice you point the wallet at credentials your node already accepts (see <a href="#config">Configuration</a>). The auto-gen path is convenient for a first run but produces creds the node won't recognize unless you copy them into <code>bitcoin.conf</code>. The file is gitignored and blocked from AI edits by the pre-tool-use hook.</div></div>
+                </div>
+              </details>
+
+              <details class="sub">
+                <summary>Private key generation <span class="sub-tag">bitcoin_wallet.py:62-66</span></summary>
+                <div class="sub-body">
+                  <p>Mixes three entropy sources and hashes them to a 256-bit value: <code>secrets.token_bytes(32)</code> (CSPRNG), <code>os.urandom(32)</code> (OS CSPRNG), and <code>random.getrandbits(256)</code> (the <em>non-cryptographic</em> Mersenne Twister). The concatenation is run through SHA-256 and returned as a 64-char hex string.</p>
+                  <figure class="code">
+                    <figcaption>bitcoin_wallet.py · generate_private_key<span class="lang">python</span></figcaption>
+                    <pre><code>entropy = (secrets.token_bytes(32) + os.urandom(32)
+           + random.getrandbits(256).to_bytes(32, 'big'))
+return hashlib.sha256(entropy).hexdigest()</code></pre>
+                  </figure>
+                  <div class="callout key"><div class="callout-title">Key concept — why the mix is fine here but not in prod</div><div class="callout-body">Folding a weak source (<code>random</code>) into strong sources (<code>secrets</code>, <code>os.urandom</code>) via SHA-256 does not weaken the result — the output is as strong as the strongest input. <code class="fileref" data-path="CLAUDE.md">CLAUDE.md</code> calls the <code>random</code> mixing "acceptable for educational purposes but NOT acceptable in production." The cleaner production form is simply <code>secrets.token_bytes(32)</code>.</div></div>
+                  <div class="callout warn"><div class="callout-title">Watch out — no curve-range check</div><div class="callout-body">A valid secp256k1 private key must be in <code>[1, n-1]</code> where <code>n</code> is the curve order. SHA-256 can theoretically produce <code>0</code> or a value ≥ <code>n</code> (probability negligibly small, but non-zero). The Phase 1 validation in <code class="fileref" data-path=".codex/commands/validate.md">.codex/commands/validate.md</code> lists this range check as a requirement that the current code does not yet enforce.</div></div>
+                </div>
+              </details>
+
+              <details class="sub">
+                <summary>Public key derivation <span class="sub-tag">bitcoin_wallet.py:68-92</span></summary>
+                <div class="sub-body">
+                  <p>Loads the 32-byte private key into <code>ecdsa.SigningKey</code> on the <code>SECP256k1</code> curve, gets the verifying key, reads the public point's <code>x</code> and <code>y</code> integers, then builds the <strong>compressed</strong> public key: a <code>0x02</code> prefix if <code>y</code> is even, <code>0x03</code> if odd, followed by the 32-byte big-endian <code>x</code>. Result is a 33-byte (66 hex char) string.</p>
+                  <figure class="code">
+                    <figcaption>bitcoin_wallet.py · derive_public_key<span class="lang">python</span></figcaption>
+                    <pre><code>signing_key = ecdsa.SigningKey.from_string(
+    bytes.fromhex(private_key_hex), curve=ecdsa.SECP256k1)
+point = signing_key.get_verifying_key().pubkey.point
+x_bytes = point.x().to_bytes(32, 'big')
+prefix = b'\x02' if point.y() % 2 == 0 else b'\x03'
+return (prefix + x_bytes).hex()</code></pre>
+                  </figure>
+                  <div class="callout key"><div class="callout-title">Key concept — point compression</div><div class="callout-body">An secp256k1 point is <code>(x, y)</code>, but for any <code>x</code> there are only two possible <code>y</code> values (one even, one odd) because the curve is symmetric about the x-axis. So you only need <code>x</code> plus one parity bit, encoded as the <code>02</code>/<code>03</code> prefix. That halves the key from 65 bytes (uncompressed, <code>04</code> prefix) to 33 bytes.</div></div>
+                </div>
+              </details>
+
+              <details class="sub">
+                <summary>Address generation (P2PKH / Base58Check) <span class="sub-tag">bitcoin_wallet.py:94-104</span></summary>
+                <div class="sub-body">
+                  <p>The canonical Bitcoin "Hash160 + version byte + checksum + Base58" pipeline. SHA-256 the compressed pubkey, RIPEMD-160 that digest (= Hash160), prepend the mainnet version byte <code>0x00</code>, compute a 4-byte checksum as the first 4 bytes of double-SHA-256 of the versioned payload, append it, and Base58-encode.</p>
+                  <figure class="code">
+                    <figcaption>bitcoin_wallet.py · generate_address<span class="lang">python</span></figcaption>
+                    <pre><code>sha = hashlib.sha256(bytes.fromhex(public_key_hex)).digest()
+h160 = hashlib.new('ripemd160', sha).digest()
+payload = b'\x00' + h160                      # 0x00 = mainnet P2PKH
+checksum = hashlib.sha256(hashlib.sha256(payload).digest()).digest()[:4]
+return base58.b58encode(payload + checksum).decode()</code></pre>
+                  </figure>
+                  <div class="callout note"><div class="callout-title">Note — testnet</div><div class="callout-body">Mainnet P2PKH uses version byte <code>0x00</code> (addresses start with <code>1</code>). Testnet uses <code>0x6f</code> (addresses start with <code>m</code>/<code>n</code>). The code hard-codes <code>0x00</code>; switching networks today means editing that literal. <code class="fileref" data-path=".codex/commands/validate.md">.codex/commands/validate.md</code> Layer 3 documents both bytes.</div></div>
+                  <div class="callout warn"><div class="callout-title">Watch out — magic numbers</div><div class="callout-body">The version byte <code>0x00</code> here and the fee <code>0.0001</code> in the send method are exactly the "magic numbers" the Phase 1 gate (<code class="fileref" data-path="CLAUDE.md">CLAUDE.md</code> §10) wants extracted to named constants. They are still inline.</div></div>
+                </div>
+              </details>
+
+              <details class="sub">
+                <summary>Balance &amp; transaction RPC methods <span class="sub-tag">bitcoin_wallet.py:106-145</span></summary>
+                <div class="sub-body">
+                  <p>Four thin RPC wrappers, each guarded by <code>try/except JSONRPCException</code>:</p>
+                  <div class="table-wrap"><table class="doc-table">
+                    <thead><tr><th>Method</th><th>RPC call</th><th>Returns</th><th>On error</th></tr></thead>
+                    <tbody>
+                      <tr><td><code>get_balance()</code></td><td><code>listunspent(0, 9999999, [address])</code></td><td>sum of UTXO amounts (<code>Decimal</code>)</td><td>prints error, returns <code>0</code></td></tr>
+                      <tr><td><code>create_raw_transaction()</code></td><td><code>createrawtransaction(inputs, outputs)</code></td><td>raw tx hex</td><td>prints error, returns <code>None</code></td></tr>
+                      <tr><td><code>sign_transaction()</code></td><td><code>signrawtransactionwithkey(raw_tx, [private_key])</code></td><td>signed hex (<code>result['hex']</code>)</td><td>prints error, returns <code>None</code></td></tr>
+                      <tr><td><code>broadcast_transaction()</code></td><td><code>sendrawtransaction(signed_tx)</code></td><td>txid</td><td>prints error, returns <code>None</code></td></tr>
+                    </tbody>
+                  </table></div>
+                  <div class="callout warn"><div class="callout-title">Watch out — errors are printed, not raised</div><div class="callout-body">These methods swallow the RPC exception, <code>print()</code> it, and return a sentinel (<code>0</code>/<code>None</code>). That conflicts with the error-handling rule in <code class="fileref" data-path="CLAUDE.md">CLAUDE.md</code> ("never swallow exceptions silently"). It is acceptable for the demo but is on the hardening list. Callers must check for <code>None</code>.</div></div>
+                </div>
+              </details>
+
+              <details class="sub">
+                <summary>High-level send <span class="sub-tag">bitcoin_wallet.py:147-182</span></summary>
+                <div class="sub-body">
+                  <p><code>create_and_send_transaction(recipient, amount)</code> is the orchestrator: it lists UTXOs, greedily accumulates inputs until their total meets <code>amount</code>, raises <code>ValueError</code> on insufficient funds, computes change as <code>total - amount - 0.0001</code> (the flat fee), adds a change output back to its own address if positive, then runs create → sign → broadcast, printing the txid on success.</p>
+                  <figure class="code">
+                    <figcaption>bitcoin_wallet.py · UTXO selection + change<span class="lang">python</span></figcaption>
+                    <pre><code>for utxo in utxos:
+    inputs.append({"txid": utxo['txid'], "vout": utxo['vout']})
+    total_input += utxo['amount']
+    if total_input &gt;= amount:
+        break
+if total_input &lt; amount:
+    raise ValueError("Insufficient funds for the transaction.")
+change_amount = total_input - amount - 0.0001  # flat fee
+outputs = {recipient_address: amount}
+if change_amount &gt; 0:
+    outputs[self.address] = change_amount</code></pre>
+                  </figure>
+                  <div class="callout warn"><div class="callout-title">Watch out — coin selection &amp; float math</div><div class="callout-body">Selection is naive first-fit (no fee-aware coin selection — that is a Phase 2 goal). The fee is a flat <code>0.0001 BTC</code> regardless of tx size, and the arithmetic mixes <code>float</code> with the <code>Decimal</code> amounts Bitcoin Core returns, which can raise a <code>TypeError</code> or introduce rounding error. Real wallets do this math in integer satoshis.</div></div>
+                </div>
+              </details>
+
+              <details class="sub">
+                <summary>The __main__ demo <span class="sub-tag">bitcoin_wallet.py:185-199</span></summary>
+                <div class="sub-body">
+                  <p>Running the file directly instantiates a wallet (fresh random key), prints the address and balance, then attempts to send <code>0.009 BTC</code> to a placeholder recipient string and catches <code>ValueError</code>.</p>
+                  <div class="callout note"><div class="callout-title">Note</div><div class="callout-body">The recipient is the literal <code>'recipient_btc_address_here'</code> — the demo will fail at <code>createrawtransaction</code> if it ever has funds. It is a smoke-test scaffold, not a usable CLI. Edit those two lines to actually send.</div></div>
+                </div>
+              </details>
+            </div>
+          </details>
+        </section>
+
+        <section class="doc-section" id="data-model">
+          <details>
+            <summary><span class="sec-num">7</span><h2>Data formats &amp; contracts</h2><span class="chevron"></span></summary>
+            <div class="sec-body">
+              <p class="lead-in">The canonical byte formats the wallet produces and consumes. These are the cross-phase contracts from the master plan.</p>
+
+              <div class="table-wrap"><table class="doc-table">
+                <thead><tr><th>Artifact</th><th>Format</th><th>Size</th><th>Python type</th></tr></thead>
+                <tbody>
+                  <tr><td>Private key</td><td>hex string</td><td>32 bytes / 64 hex</td><td><code>str</code></td></tr>
+                  <tr><td>Public key (compressed)</td><td>hex, <code>02</code>/<code>03</code> prefix + x</td><td>33 bytes / 66 hex</td><td><code>str</code></td></tr>
+                  <tr><td>Hash160</td><td>RIPEMD160(SHA256(pubkey))</td><td>20 bytes</td><td><code>bytes</code></td></tr>
+                  <tr><td>Address (P2PKH)</td><td>Base58Check, version <code>0x00</code></td><td>~34 chars</td><td><code>str</code></td></tr>
+                  <tr><td>RPC credentials</td><td>JSON {rpc_user, rpc_password}</td><td>—</td><td><code>dict[str, str]</code></td></tr>
+                  <tr><td>UTXO (from RPC)</td><td>{txid, vout, amount, ...}</td><td>—</td><td><code>dict</code></td></tr>
+                  <tr><td>Tx inputs</td><td>list of {txid, vout}</td><td>—</td><td><code>list[dict]</code></td></tr>
+                  <tr><td>Tx outputs</td><td>{address: amount}</td><td>—</td><td><code>dict[str, float]</code></td></tr>
+                </tbody>
+              </table></div>
+
+              <figure class="diagram">
+                <div class="mermaid">
+classDiagram
+    class BitcoinWallet {
+      +str private_key
+      +str public_key
+      +str address
+      +dict rpc_credentials
+      +AuthServiceProxy rpc_connection
+      +get_rpc_credentials(path) dict
+      +connect_to_rpc() AuthServiceProxy
+      +generate_private_key() str
+      +derive_public_key(hex) str
+      +generate_address(hex) str
+      +get_balance() Decimal
+      +create_raw_transaction(inputs, outputs) str
+      +sign_transaction(raw) str
+      +broadcast_transaction(signed) str
+      +create_and_send_transaction(to, amount) None
+    }
+                </div>
+                <div class="mermaid-fallback"><figure class="code"><figcaption>diagram source · mermaid</figcaption><pre><code>classDiagram
+    class BitcoinWallet {
+      +str private_key
+      +str public_key
+      +str address
+      +dict rpc_credentials
+      +AuthServiceProxy rpc_connection
+      +get_rpc_credentials(path) dict
+      +connect_to_rpc() AuthServiceProxy
+      +generate_private_key() str
+      +derive_public_key(hex) str
+      +generate_address(hex) str
+      +get_balance() Decimal
+      +create_raw_transaction(inputs, outputs) str
+      +sign_transaction(raw) str
+      +broadcast_transaction(signed) str
+      +create_and_send_transaction(to, amount) None
+    }</code></pre></figure></div>
+                <figcaption>BitcoinWallet — attributes and methods.</figcaption>
+              </figure>
+
+              <div class="callout key"><div class="callout-title">Key concept — Hash160</div><div class="callout-body">Bitcoin's address pipeline uses <em>Hash160</em> = <code>RIPEMD160(SHA256(x))</code> to shrink a 33-byte pubkey to a 20-byte fingerprint, and a 4-byte <em>double-SHA256 checksum</em> so a typo'd address fails Base58Check decoding instead of silently sending to a black hole. Both appear in the master plan's cross-phase primitives table.</div></div>
+            </div>
+          </details>
+        </section>
+
+        <section class="doc-section" id="key-logic">
+          <details>
+            <summary><span class="sec-num">8</span><h2>Key logic — the crypto pipeline</h2><span class="chevron"></span></summary>
+            <div class="sec-body">
+              <p class="lead-in">The full key-to-address derivation in plain language, then mapped to code.</p>
+
+              <ol class="steps">
+                <li><strong>Entropy → private key.</strong> SHA-256 over mixed CSPRNG bytes → 256-bit hex. <code class="fileref" data-path="bitcoin_wallet.py:62">bitcoin_wallet.py:62</code></li>
+                <li><strong>Private key → public key.</strong> ECDSA point multiplication <code>K = k·G</code> on secp256k1; compress to <code>02/03 || x</code>. <code class="fileref" data-path="bitcoin_wallet.py:68">bitcoin_wallet.py:68</code></li>
+                <li><strong>Public key → Hash160.</strong> <code>RIPEMD160(SHA256(pubkey))</code>. <code class="fileref" data-path="bitcoin_wallet.py:98">bitcoin_wallet.py:98</code></li>
+                <li><strong>Version + checksum.</strong> Prepend <code>0x00</code>; checksum = first 4 bytes of <code>SHA256(SHA256(version||h160))</code>. <code class="fileref" data-path="bitcoin_wallet.py:100">bitcoin_wallet.py:100</code></li>
+                <li><strong>Base58Check.</strong> <code>base58.b58encode(version || h160 || checksum)</code> → the address. <code class="fileref" data-path="bitcoin_wallet.py:103">bitcoin_wallet.py:103</code></li>
+              </ol>
+
+              <figure class="diagram">
+                <div class="mermaid">
+graph LR
+    K[256-bit private key] -->|k.G on secp256k1| P[Public key]
+    P -->|compress 02/03 + x| C[33-byte pubkey]
+    C -->|SHA256| S[32 bytes]
+    S -->|RIPEMD160| H[Hash160 20 bytes]
+    H -->|prepend 0x00| V[Versioned payload]
+    V -->|double SHA256, take 4| CK[Checksum]
+    V --> CAT[payload + checksum]
+    CK --> CAT
+    CAT -->|Base58| A[Bitcoin address]
+                </div>
+                <div class="mermaid-fallback"><figure class="code"><figcaption>diagram source · mermaid</figcaption><pre><code>graph LR
+    K[256-bit private key] --&gt;|k.G on secp256k1| P[Public key]
+    P --&gt;|compress 02/03 + x| C[33-byte pubkey]
+    C --&gt;|SHA256| S[32 bytes]
+    S --&gt;|RIPEMD160| H[Hash160 20 bytes]
+    H --&gt;|prepend 0x00| V[Versioned payload]
+    V --&gt;|double SHA256, take 4| CK[Checksum]
+    V --&gt; CAT[payload + checksum]
+    CK --&gt; CAT
+    CAT --&gt;|Base58| A[Bitcoin address]</code></pre></figure></div>
+                <figcaption>Key-to-address derivation, byte by byte.</figcaption>
+              </figure>
+
+              <div class="callout note"><div class="callout-title">Note — formula reference</div><div class="callout-body"><code class="fileref" data-path="docs/BLOCKCHAIN_MASTER_PLAN.md">docs/BLOCKCHAIN_MASTER_PLAN.md</code> §7 (Cross-Phase Concerns) and <code class="fileref" data-path="README.md">README.md</code> both diagram this same pipeline. The validate command (<code class="fileref" data-path=".codex/commands/validate.md">.codex/commands/validate.md</code>) defines per-layer acceptance: 256-bit key in curve range, correct compression parity, Hash160 ordering, and known-address test vectors (e.g. the genesis address <code>1A1zP1eP5QGefi2DMPTfTL5SLmv7DivfNa</code>).</div></div>
+            </div>
+          </details>
+        </section>
+
+        <section class="doc-section" id="interfaces">
+          <details>
+            <summary><span class="sec-num">9</span><h2>Interface — public API &amp; RPC calls</h2><span class="chevron"></span></summary>
+            <div class="sec-body">
+              <p class="lead-in">There is no HTTP/CLI surface of its own; the "interface" is the <code>BitcoinWallet</code> class plus the Bitcoin Core RPC calls it makes.</p>
+
+              <h3 class="anchor">Public methods</h3>
+              <div class="table-wrap"><table class="doc-table">
+                <thead><tr><th>Method</th><th>Signature</th><th>Purpose</th></tr></thead>
+                <tbody>
+                  <tr><td><code>__init__</code></td><td><code>(rpc_credentials_file='rpc_credentials.json', private_key=None)</code></td><td>Build wallet; derive address.</td></tr>
+                  <tr><td><code>generate_private_key</code></td><td><code>() -&gt; str</code> (static)</td><td>New 256-bit key (hex).</td></tr>
+                  <tr><td><code>derive_public_key</code></td><td><code>(private_key_hex: str) -&gt; str</code> (static)</td><td>Compressed pubkey (hex).</td></tr>
+                  <tr><td><code>generate_address</code></td><td><code>(public_key_hex: str) -&gt; str</code> (static)</td><td>P2PKH address.</td></tr>
+                  <tr><td><code>get_balance</code></td><td><code>() -&gt; Decimal | int</code></td><td>Sum of UTXOs for the address.</td></tr>
+                  <tr><td><code>create_raw_transaction</code></td><td><code>(inputs, outputs) -&gt; str | None</code></td><td>Build raw tx via RPC.</td></tr>
+                  <tr><td><code>sign_transaction</code></td><td><code>(raw_tx: str) -&gt; str | None</code></td><td>Sign with private key via RPC.</td></tr>
+                  <tr><td><code>broadcast_transaction</code></td><td><code>(signed_tx: str) -&gt; str | None</code></td><td>Send to network; returns txid.</td></tr>
+                  <tr><td><code>create_and_send_transaction</code></td><td><code>(recipient_address: str, amount: float) -&gt; None</code></td><td>Full send pipeline.</td></tr>
+                </tbody>
+              </table></div>
+
+              <h3 class="anchor">Bitcoin Core RPC calls used</h3>
+              <div class="table-wrap"><table class="doc-table">
+                <thead><tr><th>RPC</th><th>Args</th><th>Why</th></tr></thead>
+                <tbody>
+                  <tr><td><code>listunspent</code></td><td><code>0, 9999999, [address]</code></td><td>Fetch spendable UTXOs for the wallet address.</td></tr>
+                  <tr><td><code>createrawtransaction</code></td><td><code>inputs, outputs</code></td><td>Serialize an unsigned transaction.</td></tr>
+                  <tr><td><code>signrawtransactionwithkey</code></td><td><code>raw_tx, [private_key]</code></td><td>Sign without importing the key into the node wallet.</td></tr>
+                  <tr><td><code>sendrawtransaction</code></td><td><code>signed_tx</code></td><td>Broadcast to mempool / peers.</td></tr>
+                </tbody>
+              </table></div>
+
+              <div class="callout tip"><div class="callout-title">Tip — use as a library</div><div class="callout-body">You can import the static methods without ever touching RPC: <code>BitcoinWallet.generate_address(BitcoinWallet.derive_public_key(k))</code> gives you address-from-key with no node required. Only <code>get_balance</code> and the tx methods need a live node.</div></div>
+            </div>
+          </details>
+        </section>
+
+        <section class="doc-section" id="config">
+          <details>
+            <summary><span class="sec-num">10</span><h2>Configuration &amp; environment</h2><span class="chevron"></span></summary>
+            <div class="sec-body">
+              <p class="lead-in">Almost everything is a constant in code today; the only external config is the RPC credentials file and your node's <code>bitcoin.conf</code>.</p>
+
+              <div class="table-wrap"><table class="doc-table">
+                <thead><tr><th>Setting</th><th>Where</th><th>Default / value</th><th>Meaning</th></tr></thead>
+                <tbody>
+                  <tr><td>RPC host:port</td><td><code class="fileref" data-path="bitcoin_wallet.py:59">bitcoin_wallet.py:59</code></td><td><code>127.0.0.1:8332</code></td><td>Bitcoin Core mainnet RPC endpoint (hard-coded).</td></tr>
+                  <tr><td>RPC credentials file</td><td>constructor arg</td><td><code>rpc_credentials.json</code></td><td>JSON with <code>rpc_user</code>/<code>rpc_password</code>; gitignored.</td></tr>
+                  <tr><td>Network byte</td><td><code class="fileref" data-path="bitcoin_wallet.py:100">bitcoin_wallet.py:100</code></td><td><code>0x00</code></td><td>Mainnet P2PKH version byte.</td></tr>
+                  <tr><td>Flat fee</td><td><code class="fileref" data-path="bitcoin_wallet.py:162">bitcoin_wallet.py:162</code></td><td><code>0.0001 BTC</code></td><td>Subtracted from change on every send.</td></tr>
+                  <tr><td>Python version</td><td><code class="fileref" data-path="pyproject.toml">pyproject.toml</code></td><td><code>&gt;=3.13</code></td><td>Interpreter floor.</td></tr>
+                  <tr><td>ruff line length</td><td><code class="fileref" data-path="pyproject.toml">pyproject.toml</code></td><td><code>120</code></td><td>Lint/format width.</td></tr>
+                </tbody>
+              </table></div>
+
+              <h3 class="anchor">Node-side bitcoin.conf</h3>
+              <p>To use the RPC features, run Bitcoin Core with RPC enabled and credentials that match what the wallet sends (per <code class="fileref" data-path="README.md">README.md</code>):</p>
+              <figure class="code">
+                <figcaption>bitcoin.conf · node side<span class="lang">ini</span></figcaption>
+                <pre><code>server=1
+rpcuser=your_user
+rpcpassword=your_password
+rpcallowip=127.0.0.1
+rpcport=8332</code></pre>
+              </figure>
+              <div class="callout danger"><div class="callout-title">Do not</div><div class="callout-body">Never commit <code>rpc_credentials.json</code>. It is gitignored (<code class="fileref" data-path=".gitignore">.gitignore</code>) and the pre-tool-use hook (<code class="fileref" data-path="scripts/hooks/pre-tool-use.cjs">scripts/hooks/pre-tool-use.cjs</code>) hard-blocks any AI write to a path containing <code>rpc_credentials</code>.</div></div>
+            </div>
+          </details>
+        </section>
+
+        <section class="doc-section" id="run">
+          <details>
+            <summary><span class="sec-num">11</span><h2>How to run it</h2><span class="chevron"></span></summary>
+            <div class="sec-body">
+              <p class="lead-in">There is no Docker and no service launcher — it is a script. The <code>claude-teams.*</code> files are agent launchers, not app launchers.</p>
+
+              <h3 class="anchor">Address-only (no node needed)</h3>
+              <ol class="steps">
+                <li>Install deps (not declared in the manifest yet): <code>uv add ecdsa base58 python-bitcoinrpc</code> (or <code>pip install ecdsa base58 python-bitcoinrpc</code>).</li>
+                <li>From the repo root, generate a key/address in a REPL using the static methods on <code class="fileref" data-path="bitcoin_wallet.py">bitcoin_wallet.py</code> — no node required.</li>
+              </ol>
+
+              <h3 class="anchor">Full demo (node required)</h3>
+              <ol class="steps">
+                <li>Start Bitcoin Core with RPC enabled (see <a href="#config">Configuration</a>) and matching credentials in <code>rpc_credentials.json</code>.</li>
+                <li>Run the module: <code>python bitcoin_wallet.py</code> (the docs say <code>cd blockchain_dev/bitcoin_wallet_dev</code> first — ignore; the file is at the repo root).</li>
+                <li>It prints the wallet address and balance, then attempts the placeholder send (which fails until you edit the recipient/amount in the <code>__main__</code> block).</li>
+              </ol>
+
+              <div class="callout note"><div class="callout-title">Note — claude-teams launchers</div><div class="callout-body"><code class="fileref" data-path="claude-teams.sh">claude-teams.sh</code> / <code class="fileref" data-path="claude-teams.bat">claude-teams.bat</code> set <code>CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS=1</code> and launch the Claude Code CLI. They are dev-environment helpers, not ways to run the wallet. This project has no <code>run_blockchain.sh</code>/Docker launcher because there is no long-running service yet (Docker is deferred to Phase 2+ per <code class="fileref" data-path="CLAUDE.md">CLAUDE.md</code> §2).</div></div>
+            </div>
+          </details>
+        </section>
+
+        <section class="doc-section" id="editing">
+          <details>
+            <summary><span class="sec-num">12</span><h2>How to edit &amp; extend it</h2><span class="chevron"></span></summary>
+            <div class="sec-body">
+              <p class="lead-in">Practical, owner-facing: where each kind of change lands and the conventions to respect.</p>
+
+              <h3 class="anchor">Finish hardening Phase 1</h3>
+              <p>The closest-to-hand work, all in <code class="fileref" data-path="bitcoin_wallet.py">bitcoin_wallet.py</code>:</p>
+              <ul>
+                <li><strong>Named constants:</strong> create a <code>constants.py</code> (per the "one concept per file" rule) for <code>MAINNET_VERSION_BYTE = b'\x00'</code> and <code>DEFAULT_FEE_BTC = Decimal('0.0001')</code>; import them instead of the inline literals at lines 100 and 162.</li>
+                <li><strong>Docstrings:</strong> add a one-line docstring to each method (the gate wants them; comments currently stand in).</li>
+                <li><strong>Curve-range check:</strong> in <code>generate_private_key</code>, reject keys outside <code>[1, n-1]</code> for secp256k1.</li>
+                <li><strong>Integer-satoshi math:</strong> rework <code>create_and_send_transaction</code> to avoid mixing <code>float</code> and <code>Decimal</code> (the fee/change arithmetic).</li>
+              </ul>
+
+              <h3 class="anchor">Add a test suite (the biggest gap)</h3>
+              <ol class="steps">
+                <li>Create <code>tests/</code> mirroring the module; add <code>pytest</code>/<code>pytest-cov</code> to the manifest.</li>
+                <li>Test the three deterministic crypto methods with <strong>known vectors</strong> — exact equality, never mock the crypto (rule: <code class="fileref" data-path="CLAUDE.md">CLAUDE.md</code> §3 Testing). Validate <code>generate_address</code> against a published address like the genesis address.</li>
+                <li><strong>Mock the RPC</strong> (the external dependency) for <code>get_balance</code> and the tx methods — patch <code>AuthServiceProxy</code>.</li>
+                <li>Wire tests into CI by extending <code class="fileref" data-path=".github/workflows/ci.yml">.github/workflows/ci.yml</code> (today it only runs <code>ruff check</code>).</li>
+              </ol>
+
+              <h3 class="anchor">Move toward the planned Phase 2 layout</h3>
+              <p>The master plan (<code class="fileref" data-path="docs/BLOCKCHAIN_MASTER_PLAN.md">docs/BLOCKCHAIN_MASTER_PLAN.md</code> §5) sketches a <code>src/</code> package split (keys/, address/, wallet/, transaction/, rpc/). When you outgrow the single file, follow that structure and the "one class per file" rule. New crypto goes through audited libraries only — no hand-rolled algorithms.</p>
+
+              <div class="callout danger"><div class="callout-title">Do not — read-only reference</div><div class="callout-body">If you ever clone the Bitcoin Core reference into <code>blockchain_dev/bitcoin_blockchain_dev/</code>, never edit it. The pre-tool-use hook (<code class="fileref" data-path="scripts/hooks/pre-tool-use.cjs">scripts/hooks/pre-tool-use.cjs</code>) blocks AI writes to any path containing <code>/bitcoin_blockchain_dev/</code>, and the phase-awareness skill blocks it too.</div></div>
+
+              <div class="callout tip"><div class="callout-title">Tip — let the agent guards help you</div><div class="callout-body">The post-tool-use hook (<code class="fileref" data-path="scripts/hooks/post-tool-use.cjs">scripts/hooks/post-tool-use.cjs</code>) injects a reminder whenever you edit a file whose path contains <code>wallet</code>/<code>keys</code>/<code>address</code>/<code>transaction</code>/<code>signer</code> — it re-lists the crypto-safety checklist. Use <code>.codex/commands/validate.md</code> to run the per-layer crypto validation before you trust a change.</div></div>
+
+              <h3 class="anchor">After any change — docs &amp; versioning</h3>
+              <p>Per <code class="fileref" data-path="CLAUDE.md">CLAUDE.md</code> §8/§9: update <code class="fileref" data-path="docs/status.md">docs/status.md</code> and add a computed-next-version entry to <code class="fileref" data-path="docs/versions.md">docs/versions.md</code>. The Stop hook (<code class="fileref" data-path="scripts/hooks/stop.cjs">scripts/hooks/stop.cjs</code>) nudges you if source changed but <code>docs/</code> did not. Do <strong>not</strong> hand-edit the version in <code class="fileref" data-path="pyproject.toml">pyproject.toml</code> — the release workflow bumps it.</p>
+            </div>
+          </details>
+        </section>
+
+        <section class="doc-section" id="testing">
+          <details>
+            <summary><span class="sec-num">13</span><h2>Testing</h2><span class="chevron"></span></summary>
+            <div class="sec-body">
+              <p class="lead-in">Intended framework is pytest + pytest-cov with a 100% target. Status: not started.</p>
+
+              <div class="callout warn"><div class="callout-title">Watch out — no tests exist</div><div class="callout-body">There is no <code>tests/</code> directory, no test file, and no pytest config in <code class="fileref" data-path="pyproject.toml">pyproject.toml</code>. The Phase 1 completion gate explicitly requires a suite with known Bitcoin test vectors; this is the most significant unmet gate item.</div></div>
+
+              <h3 class="anchor">The rules the future suite must follow</h3>
+              <dl class="doc-dl">
+                <dt>Validate against known vectors</dt><dd>Key→pubkey and pubkey→address must match published Bitcoin/secp256k1 test cases (e.g. the genesis address), per <code class="fileref" data-path=".codex/commands/validate.md">.codex/commands/validate.md</code>.</dd>
+                <dt>Never mock crypto</dt><dd>Cryptographic operations are deterministic — test them against real computations with exact equality. Mocking them hides bugs (<code class="fileref" data-path="CLAUDE.md">CLAUDE.md</code> §3).</dd>
+                <dt>Mock the RPC</dt><dd>The Bitcoin Core node is the external dependency — patch <code>AuthServiceProxy</code> so balance/tx tests run without a node.</dd>
+                <dt>Exact equality</dt><dd>No tolerance-based comparison; crypto output is bit-exact.</dd>
+              </dl>
+            </div>
+          </details>
+        </section>
+
+        <section class="doc-section" id="ci">
+          <details>
+            <summary><span class="sec-num">14</span><h2>Build, CI &amp; release</h2><span class="chevron"></span></summary>
+            <div class="sec-body">
+              <p class="lead-in">CI runs on GitHub Actions (not GitLab, despite the global convention). Two workflows: lint-only CI and a manual release bump.</p>
+
+              <details class="sub">
+                <summary>CI — lint <span class="sub-tag">.github/workflows/ci.yml</span></summary>
+                <div class="sub-body">
+                  <p>Triggers on push/PR to <code>main</code>/<code>staging</code>/<code>dev</code> and manual dispatch. A single <code>lint</code> job on <code>ubuntu-latest</code> sets up uv + Python 3.13 and runs <code>uvx ruff check .</code>. There is no test, coverage, build, or docker stage yet — consistent with there being no tests and no service.</p>
+                  <div class="filelist">
+                    <div class="filecard"><code class="fileref" data-path=".github/workflows/ci.yml">.github/workflows/ci.yml</code><span class="filecard-desc">Lint-only pipeline (ruff).</span></div>
+                  </div>
+                </div>
+              </details>
+
+              <details class="sub">
+                <summary>Release — manual version bump <span class="sub-tag">.github/workflows/release.yml</span></summary>
+                <div class="sub-body">
+                  <p>Manually dispatched on <code>main</code> with a <code>bump</code> input (<code>patch</code>/<code>minor</code>/<code>major</code>). It runs <code>uv version --bump</code>, commits the new <code>pyproject.toml</code> (and <code>uv.lock</code> if present), tags <code>vX.Y.Z</code>, and pushes both the commit and the tag.</p>
+                  <div class="filelist">
+                    <div class="filecard"><code class="fileref" data-path=".github/workflows/release.yml">.github/workflows/release.yml</code><span class="filecard-desc">uv-driven semver bump + tag + push.</span></div>
+                  </div>
+                  <div class="callout key"><div class="callout-title">Key concept</div><div class="callout-body">The release workflow owns the version field in <code class="fileref" data-path="pyproject.toml">pyproject.toml</code>. You document the next version in <code class="fileref" data-path="docs/versions.md">docs/versions.md</code>; the workflow performs the actual bump and tag. Don't edit the version manually.</div></div>
+                </div>
+              </details>
+            </div>
+          </details>
+        </section>
+
+        <section class="doc-section" id="agents">
+          <details>
+            <summary><span class="sec-num">15</span><h2>Agent wiring (.codex / .agents)</h2><span class="chevron"></span></summary>
+            <div class="sec-body">
+              <p class="lead-in">This repo is set up for AI-assisted development with OS-agnostic Node hooks and a phase-awareness skill. Worth knowing if you wonder why writes get blocked.</p>
+
+              <details class="sub">
+                <summary>Hooks <span class="sub-tag">.codex/hooks.json + scripts/hooks/*.cjs</span></summary>
+                <div class="sub-body">
+                  <p>Hooks are pure Node <code>.cjs</code> (no bash/jq/python — they must run identically on Windows and macOS, per the user's fleet convention). <code class="fileref" data-path=".codex/hooks.json">.codex/hooks.json</code> wires events to scripts:</p>
+                  <div class="table-wrap"><table class="doc-table">
+                    <thead><tr><th>Event</th><th>Script</th><th>Behavior</th></tr></thead>
+                    <tbody>
+                      <tr><td>PreToolUse (Write/Edit)</td><td><code class="fileref" data-path="scripts/hooks/pre-tool-use.cjs">pre-tool-use.cjs</code></td><td>Blocks writes to <code>/bitcoin_blockchain_dev/</code>, <code>rpc_credentials</code>, and sensitive files (.env/.pem/.key/etc).</td></tr>
+                      <tr><td>PostToolUse (Write/Edit)</td><td><code class="fileref" data-path="scripts/hooks/post-tool-use.cjs">post-tool-use.cjs</code></td><td>Injects a crypto-safety / constants / tests reminder based on the edited path.</td></tr>
+                      <tr><td>Stop</td><td><code class="fileref" data-path="scripts/hooks/stop.cjs">stop.cjs</code></td><td>Warns about uncommitted changes and stale docs; never runs git mutations.</td></tr>
+                      <tr><td>Stop</td><td><code class="fileref" data-path="scripts/hooks/stop-memory.cjs">stop-memory.cjs</code></td><td>Memory-update hook (second Stop handler).</td></tr>
+                    </tbody>
+                  </table></div>
+                  <p>Shared helpers (stdin parsing, path normalization, sensitive-path detection, read-only git) live in <code class="fileref" data-path="scripts/hooks/hookUtils.cjs">scripts/hooks/hookUtils.cjs</code>.</p>
+                </div>
+              </details>
+
+              <details class="sub">
+                <summary>Slash commands &amp; skill <span class="sub-tag">.codex/commands + .agents/skills</span></summary>
+                <div class="sub-body">
+                  <div class="filelist">
+                    <div class="filecard"><code class="fileref" data-path=".codex/commands/review.md">.codex/commands/review.md</code><span class="filecard-desc">Deep code review against project + crypto-safety standards; produces a verdict report.</span></div>
+                    <div class="filecard"><code class="fileref" data-path=".codex/commands/validate.md">.codex/commands/validate.md</code><span class="filecard-desc">5-layer crypto validation (key gen, pubkey, address, tx, RPC) against Bitcoin spec + test vectors.</span></div>
+                    <div class="filecard"><code class="fileref" data-path=".codex/commands/pre-commit.md">.codex/commands/pre-commit.md</code><span class="filecard-desc">Read-only pre-commit audit (lint, tests, crypto safety, reference isolation, credentials, docs).</span></div>
+                    <div class="filecard"><code class="fileref" data-path=".agents/skills/phase-awareness/SKILL.md">.agents/skills/phase-awareness/SKILL.md</code><span class="filecard-desc">Orients the agent to the current phase; blocks Phase 2+ features and read-only-dir edits.</span></div>
+                  </div>
+                </div>
+              </details>
+            </div>
+          </details>
+        </section>
+
+        <section class="doc-section" id="roadmap">
+          <details>
+            <summary><span class="sec-num">16</span><h2>Roadmap &amp; phases</h2><span class="chevron"></span></summary>
+            <div class="sec-body">
+              <p class="lead-in">Three phases. Only Phase 1 has code; Phases 2–3 are planned in the master plan.</p>
+
+              <div class="table-wrap"><table class="doc-table">
+                <thead><tr><th>Phase</th><th>Focus</th><th>Key deliverables</th><th>Status</th></tr></thead>
+                <tbody>
+                  <tr><td><strong>1</strong></td><td>Wallet basics</td><td>Key gen, compressed pubkey, P2PKH address, RPC tx lifecycle</td><td>In progress (hardening)</td></tr>
+                  <tr><td><strong>2</strong></td><td>Enhanced wallet</td><td>BIP-32/39/44 HD keys, SegWit/Bech32, multi-sig (P2SH), AES-256-GCM encryption, coin selection, fee estimation</td><td>Planned</td></tr>
+                  <tr><td><strong>3</strong></td><td>Custom blockchain</td><td>PoW consensus, P2P, Merkle trees, mempool, script engine, chain selection; FastAPI node</td><td>Planned</td></tr>
+                </tbody>
+              </table></div>
+
+              <figure class="diagram">
+                <div class="mermaid">
+gantt
+    title Blockchain project phases
+    dateFormat YYYY-MM
+    axisFormat %Y-%m
+    section Phase 1
+    Wallet basics            :p1, 2024-01, 3M
+    section Phase 2
+    HD wallet BIP-32/39/44   :p2a, after p1, 2M
+    SegWit and Bech32        :p2b, after p2a, 1M
+    Multi-signature          :p2c, after p2b, 1M
+    section Phase 3
+    Custom blockchain core   :p3a, after p2c, 3M
+    Consensus and mining     :p3b, after p3a, 2M
+    P2P networking           :p3c, after p3b, 2M
+                </div>
+                <div class="mermaid-fallback"><figure class="code"><figcaption>diagram source · mermaid</figcaption><pre><code>gantt
+    title Blockchain project phases
+    dateFormat YYYY-MM
+    axisFormat %Y-%m
+    section Phase 1
+    Wallet basics            :p1, 2024-01, 3M
+    section Phase 2
+    HD wallet BIP-32/39/44   :p2a, after p1, 2M
+    SegWit and Bech32        :p2b, after p2a, 1M
+    Multi-signature          :p2c, after p2b, 1M
+    section Phase 3
+    Custom blockchain core   :p3a, after p2c, 3M
+    Consensus and mining     :p3b, after p3a, 2M
+    P2P networking           :p3c, after p3b, 2M</code></pre></figure></div>
+                <figcaption>Phase roadmap (from the master plan).</figcaption>
+              </figure>
+
+              <h3 class="anchor">Phase 1 completion gate</h3>
+              <p>From <code class="fileref" data-path="CLAUDE.md">CLAUDE.md</code> §10 — Phase 1 is done when: full type annotations (✓ present), <code>from __future__ import annotations</code> (✓), docstrings on all methods (✗), a pytest suite with test vectors (✗), no magic numbers (✗), ruff clean (likely ✓), docs current (partly — paths stale), README accurate (partly — paths stale). The remaining work is documentation, constants extraction, and tests.</p>
+            </div>
+          </details>
+        </section>
+
+        <section class="doc-section" id="glossary">
+          <details>
+            <summary><span class="sec-num">17</span><h2>Domain glossary</h2><span class="chevron"></span></summary>
+            <div class="sec-body">
+              <p class="lead-in">The Bitcoin terms a newcomer needs to read this code.</p>
+              <dl class="doc-dl">
+                <dt>secp256k1</dt><dd>The specific elliptic curve Bitcoin uses for ECDSA. Defines the generator point <code>G</code> and order <code>n</code>; a private key is a scalar <code>k</code>, the public key is the point <code>k·G</code>.</dd>
+                <dt>ECDSA</dt><dd>Elliptic Curve Digital Signature Algorithm — the scheme used to prove ownership of a key when spending.</dd>
+                <dt>Compressed public key</dt><dd>33-byte pubkey encoded as a parity prefix (<code>02</code>/<code>03</code>) plus the 32-byte x-coordinate, vs. the 65-byte uncompressed (<code>04</code>) form.</dd>
+                <dt>Hash160</dt><dd><code>RIPEMD160(SHA256(x))</code> — the 20-byte fingerprint at the core of a P2PKH address.</dd>
+                <dt>P2PKH</dt><dd>Pay-to-Public-Key-Hash — the classic Bitcoin address type whose addresses start with <code>1</code> on mainnet.</dd>
+                <dt>Base58Check</dt><dd>Base58 encoding plus a 4-byte double-SHA256 checksum, so typos are caught on decode.</dd>
+                <dt>UTXO</dt><dd>Unspent Transaction Output — the "coins" a wallet owns; balance is the sum of UTXOs for an address.</dd>
+                <dt>Raw transaction</dt><dd>The serialized (unsigned or signed) transaction bytes, hex-encoded, as produced by <code>createrawtransaction</code>.</dd>
+                <dt>DER encoding</dt><dd>The canonical binary encoding Bitcoin requires for ECDSA signatures.</dd>
+                <dt>Change output</dt><dd>The leftover value returned to the sender when inputs exceed amount + fee.</dd>
+                <dt>JSON-RPC</dt><dd>The HTTP-based remote procedure protocol Bitcoin Core exposes for wallet/chain operations.</dd>
+                <dt>HD wallet (Phase 2)</dt><dd>Hierarchical-Deterministic wallet (BIP-32) — many keys derived deterministically from one seed.</dd>
+              </dl>
+            </div>
+          </details>
+        </section>
+
+        <section class="doc-section" id="file-index">
+          <details>
+            <summary><span class="sec-num">18</span><h2>Key files index</h2><span class="chevron"></span></summary>
+            <div class="sec-body">
+              <p class="lead-in">A single jump-off map of the files that matter.</p>
+              <div class="table-wrap"><table class="doc-table">
+                <thead><tr><th>File</th><th>What it's for</th></tr></thead>
+                <tbody>
+                  <tr><td><code class="fileref" data-path="bitcoin_wallet.py">bitcoin_wallet.py</code></td><td>The whole wallet — <code>BitcoinWallet</code> class + demo.</td></tr>
+                  <tr><td><code class="fileref" data-path="pyproject.toml">pyproject.toml</code></td><td>Metadata, Python pin, ruff config, version source.</td></tr>
+                  <tr><td><code class="fileref" data-path="uv.lock">uv.lock</code></td><td>uv lockfile (no third-party deps locked yet).</td></tr>
+                  <tr><td><code class="fileref" data-path="CLAUDE.md">CLAUDE.md</code></td><td>Project rules / phase constraints / crypto rules (Claude).</td></tr>
+                  <tr><td><code class="fileref" data-path="AGENTS.md">AGENTS.md</code></td><td>Same rules for the Codex agent.</td></tr>
+                  <tr><td><code class="fileref" data-path="README.md">README.md</code></td><td>Human overview + architecture + crypto-flow diagrams.</td></tr>
+                  <tr><td><code class="fileref" data-path="docs/BLOCKCHAIN_MASTER_PLAN.md">docs/BLOCKCHAIN_MASTER_PLAN.md</code></td><td>Authoritative plan: phases, gates, cross-phase crypto, tech decisions.</td></tr>
+                  <tr><td><code class="fileref" data-path="docs/status.md">docs/status.md</code></td><td>Live state / what's missing / next steps.</td></tr>
+                  <tr><td><code class="fileref" data-path="docs/versions.md">docs/versions.md</code></td><td>Semver changelog.</td></tr>
+                  <tr><td><code class="fileref" data-path=".github/workflows/ci.yml">.github/workflows/ci.yml</code></td><td>Lint-only CI (ruff).</td></tr>
+                  <tr><td><code class="fileref" data-path=".github/workflows/release.yml">.github/workflows/release.yml</code></td><td>Manual semver bump + tag.</td></tr>
+                  <tr><td><code class="fileref" data-path=".codex/hooks.json">.codex/hooks.json</code></td><td>Hook event wiring.</td></tr>
+                  <tr><td><code class="fileref" data-path="scripts/hooks/pre-tool-use.cjs">scripts/hooks/pre-tool-use.cjs</code></td><td>Blocks read-only-dir / credential / sensitive writes.</td></tr>
+                  <tr><td><code class="fileref" data-path="scripts/hooks/post-tool-use.cjs">scripts/hooks/post-tool-use.cjs</code></td><td>Crypto-safety reminders on edit.</td></tr>
+                  <tr><td><code class="fileref" data-path="scripts/hooks/hookUtils.cjs">scripts/hooks/hookUtils.cjs</code></td><td>Shared hook helpers.</td></tr>
+                  <tr><td><code class="fileref" data-path=".agents/skills/phase-awareness/SKILL.md">.agents/skills/phase-awareness/SKILL.md</code></td><td>Phase-scope enforcement skill.</td></tr>
+                  <tr><td><code class="fileref" data-path="claude-teams.sh">claude-teams.sh</code></td><td>Agent-teams launcher (sh).</td></tr>
+                  <tr><td><code class="fileref" data-path="claude-teams.bat">claude-teams.bat</code></td><td>Agent-teams launcher (bat).</td></tr>
+                </tbody>
+              </table></div>
+            </div>
+          </details>
+        </section>
+
+      </div>
+    </main>
+  </div>
+
+  <button id="backTop" title="Back to top"><span class="ico"></span></button>
+
+  <footer class="doc-footer">
+    <p>Human-facing documentation for <strong>blockchain</strong> · generated 2026-06-07.
+    Styling and behavior are inlined directly into this file — it is fully self-contained and needs no external assets. Re-open after editing source to keep this guide in sync.</p>
+  </footer>
+
+  <script>
+/* ============================================================================
+   doc.js — Shared behavior for every project's PROJECT_DOCUMENTATION.html.
+   Inlined directly into this PROJECT_DOCUMENTATION.html (self-contained; no external script).
+   Responsibilities:
+     - theme (light/dark) with persistence
+     - auto-built table of contents from <section class="doc-section"> + h3 anchors
+     - scroll-spy active highlighting
+     - live full-text section filter (search box)
+     - expand-all / collapse-all
+     - click-to-copy file references and code blocks
+     - scroll progress bar + back-to-top
+     - mermaid diagram rendering (CDN) with graceful source fallback
+     - print = expand everything
+   No build step, no framework. Pure DOM.
+   ============================================================================ */
+(function () {
+  "use strict";
+
+  var THEME_KEY = "projDocTheme";
+
+  /* ---- theme (apply ASAP to avoid flash) ---- */
+  function preferredTheme() {
+    var saved = null;
+    try { saved = localStorage.getItem(THEME_KEY); } catch (e) {}
+    if (saved === "light" || saved === "dark") return saved;
+    return window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+  }
+  function applyTheme(t) {
+    document.documentElement.setAttribute("data-theme", t);
+    var btn = document.getElementById("themeToggle");
+    if (btn) {
+      var ico = btn.querySelector(".ico");
+      if (ico) ico.style.webkitMaskImage = ico.style.maskImage = "var(--icon-" + (t === "dark" ? "sun" : "moon") + ")";
+      btn.setAttribute("aria-label", t === "dark" ? "Switch to light theme" : "Switch to dark theme");
+    }
+  }
+  applyTheme(preferredTheme());
+
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", init);
+  } else {
+    init();
+  }
+
+  function init() {
+    applyTheme(preferredTheme());
+    buildTOC();
+    wireControls();
+    wireFileRefs();
+    wireCodeCopy();
+    wireScrollProgress();
+    wireBackToTop();
+    wireScrollSpy();
+    wirePrint();
+    initMermaid();
+    handleInitialHash();
+  }
+
+  /* ---- slugify ---- */
+  function slug(s) {
+    return s.toLowerCase().trim().replace(/[^\w\s-]/g, "").replace(/\s+/g, "-").replace(/-+/g, "-").slice(0, 60);
+  }
+
+  /* ---- TOC ---- */
+  function buildTOC() {
+    var toc = document.getElementById("docToc");
+    if (!toc) return;
+    var sections = Array.prototype.slice.call(document.querySelectorAll("main .doc-section"));
+    if (!sections.length) return;
+    var ul = document.createElement("ul");
+    var n = 0;
+    sections.forEach(function (sec) {
+      n++;
+      if (!sec.id) sec.id = "sec-" + n;
+      var h2 = sec.querySelector("summary h2");
+      var title = h2 ? h2.textContent.trim() : ("Section " + n);
+      var li = document.createElement("li");
+      var a = document.createElement("a");
+      a.href = "#" + sec.id;
+      a.dataset.target = sec.id;
+      a.innerHTML = '<span class="toc-num">' + n + "</span>" + escapeHTML(title);
+      li.appendChild(a);
+      ul.appendChild(li);
+
+      // nested h3 anchors marked with class "anchor"
+      var subs = sec.querySelectorAll("h3.anchor");
+      Array.prototype.forEach.call(subs, function (h3) {
+        if (!h3.id) h3.id = sec.id + "-" + slug(h3.textContent);
+        var sli = document.createElement("li");
+        var sa = document.createElement("a");
+        sa.href = "#" + h3.id;
+        sa.className = "sub";
+        sa.dataset.target = h3.id;
+        sa.textContent = h3.textContent.trim();
+        sli.appendChild(sa);
+        ul.appendChild(sli);
+      });
+    });
+    toc.appendChild(ul);
+
+    // smooth scroll with header offset, and open target section
+    toc.addEventListener("click", function (e) {
+      var a = e.target.closest("a");
+      if (!a) return;
+      e.preventDefault();
+      var id = a.dataset.target;
+      revealAndScroll(id);
+      history.replaceState(null, "", "#" + id);
+    });
+  }
+
+  function revealAndScroll(id) {
+    var el = document.getElementById(id);
+    if (!el) return;
+    // open the enclosing section + any parent <details>
+    var d = el.closest("details");
+    while (d) { d.open = true; d = d.parentElement ? d.parentElement.closest("details") : null; }
+    var sec = el.closest(".doc-section") || el;
+    if (sec.querySelector) {
+      var det = sec.querySelector(":scope > details");
+      if (det) det.open = true;
+    }
+    setTimeout(function () {
+      el.scrollIntoView({ behavior: "smooth", block: "start" });
+    }, 30);
+  }
+
+  /* ---- controls (expand/collapse/theme/print/search) ---- */
+  function wireControls() {
+    var expand = document.getElementById("expandAll");
+    var collapse = document.getElementById("collapseAll");
+    var theme = document.getElementById("themeToggle");
+    var print = document.getElementById("printBtn");
+    var search = document.getElementById("docSearch");
+
+    if (expand) expand.addEventListener("click", function () { allDetails().forEach(function (d) { d.open = true; }); });
+    if (collapse) collapse.addEventListener("click", function () {
+      document.querySelectorAll("main .doc-section > details").forEach(function (d) { d.open = false; });
+      document.querySelectorAll("main details.sub").forEach(function (d) { d.open = false; });
+    });
+    if (theme) theme.addEventListener("click", function () {
+      var cur = document.documentElement.getAttribute("data-theme");
+      var next = cur === "dark" ? "light" : "dark";
+      try { localStorage.setItem(THEME_KEY, next); } catch (e) {}
+      applyTheme(next);
+    });
+    if (print) print.addEventListener("click", function () { window.print(); });
+    if (search) wireSearch(search);
+  }
+
+  function allDetails() { return Array.prototype.slice.call(document.querySelectorAll("main details")); }
+
+  /* ---- search / filter ---- */
+  function wireSearch(input) {
+    var countEl = document.querySelector(".search-count");
+    var sections = Array.prototype.slice.call(document.querySelectorAll("main .doc-section"));
+    var tocLinks = Array.prototype.slice.call(document.querySelectorAll("#docToc a"));
+    var debounce;
+    input.addEventListener("input", function () {
+      clearTimeout(debounce);
+      debounce = setTimeout(run, 120);
+    });
+    input.addEventListener("keydown", function (e) { if (e.key === "Escape") { input.value = ""; run(); input.blur(); } });
+
+    function run() {
+      var q = input.value.trim().toLowerCase();
+      var shown = 0;
+      if (!q) {
+        sections.forEach(function (s) { s.classList.remove("filtered-out"); });
+        tocLinks.forEach(function (a) { a.classList.remove("filtered-out"); });
+        if (countEl) countEl.textContent = "";
+        return;
+      }
+      sections.forEach(function (s) {
+        var match = s.textContent.toLowerCase().indexOf(q) !== -1;
+        s.classList.toggle("filtered-out", !match);
+        if (match) {
+          shown++;
+          var det = s.querySelector(":scope > details");
+          if (det) det.open = true;
+        }
+        var link = document.querySelector('#docToc a[data-target="' + s.id + '"]');
+        if (link) link.classList.toggle("filtered-out", !match);
+      });
+      if (countEl) countEl.textContent = shown + (shown === 1 ? " match" : " matches");
+    }
+  }
+
+  /* ---- file references: click to copy path ---- */
+  function wireFileRefs() {
+    document.body.addEventListener("click", function (e) {
+      var ref = e.target.closest("code.fileref");
+      if (!ref) return;
+      var path = ref.getAttribute("data-path") || ref.textContent.trim();
+      copyText(path).then(function () {
+        var old = ref.textContent;
+        ref.classList.add("copied");
+        ref.textContent = "copied: " + path;
+        setTimeout(function () { ref.textContent = old; ref.classList.remove("copied"); }, 1100);
+      });
+    });
+  }
+
+  /* ---- code blocks: copy button ---- */
+  function wireCodeCopy() {
+    document.querySelectorAll("figure.code").forEach(function (fig) {
+      var pre = fig.querySelector("pre");
+      if (!pre) return;
+      var btn = document.createElement("button");
+      btn.className = "btn code-copy";
+      btn.innerHTML = '<span class="ico" style="-webkit-mask:var(--icon-copy) center/contain no-repeat;mask:var(--icon-copy) center/contain no-repeat"></span><span class="label">Copy</span>';
+      btn.addEventListener("click", function () {
+        copyText(pre.innerText).then(function () {
+          var l = btn.querySelector(".label");
+          if (l) { l.textContent = "Copied"; setTimeout(function () { l.textContent = "Copy"; }, 1100); }
+        });
+      });
+      fig.appendChild(btn);
+    });
+  }
+
+  function copyText(t) {
+    if (navigator.clipboard && navigator.clipboard.writeText) return navigator.clipboard.writeText(t).catch(fallback);
+    return fallback();
+    function fallback() {
+      try {
+        var ta = document.createElement("textarea");
+        ta.value = t; ta.style.position = "fixed"; ta.style.opacity = "0";
+        document.body.appendChild(ta); ta.select(); document.execCommand("copy");
+        document.body.removeChild(ta);
+      } catch (e) {}
+      return Promise.resolve();
+    }
+  }
+
+  /* ---- scroll progress ---- */
+  function wireScrollProgress() {
+    var bar = document.getElementById("scrollProgress");
+    if (!bar) return;
+    function upd() {
+      var h = document.documentElement;
+      var max = h.scrollHeight - h.clientHeight;
+      var pct = max > 0 ? (h.scrollTop / max) * 100 : 0;
+      bar.style.width = pct + "%";
+    }
+    window.addEventListener("scroll", upd, { passive: true });
+    window.addEventListener("resize", upd);
+    upd();
+  }
+
+  /* ---- back to top ---- */
+  function wireBackToTop() {
+    var b = document.getElementById("backTop");
+    if (!b) return;
+    b.addEventListener("click", function () { window.scrollTo({ top: 0, behavior: "smooth" }); });
+    window.addEventListener("scroll", function () {
+      b.classList.toggle("show", window.scrollY > 600);
+    }, { passive: true });
+  }
+
+  /* ---- scroll-spy ---- */
+  function wireScrollSpy() {
+    var links = {};
+    document.querySelectorAll("#docToc a").forEach(function (a) { links[a.dataset.target] = a; });
+    var targets = Array.prototype.slice.call(document.querySelectorAll("main .doc-section, main h3.anchor"));
+    if (!targets.length || !("IntersectionObserver" in window)) return;
+    var visible = new Set();
+    var obs = new IntersectionObserver(function (entries) {
+      entries.forEach(function (en) {
+        if (en.isIntersecting) visible.add(en.target.id); else visible.delete(en.target.id);
+      });
+      var best = null, bestTop = Infinity;
+      visible.forEach(function (id) {
+        var el = document.getElementById(id);
+        if (!el) return;
+        var top = el.getBoundingClientRect().top;
+        if (top < bestTop) { bestTop = top; best = id; }
+      });
+      Object.keys(links).forEach(function (id) { links[id].classList.toggle("active", id === best); });
+    }, { rootMargin: "-70px 0px -65% 0px", threshold: 0 });
+    targets.forEach(function (t) { if (t.id) obs.observe(t); });
+  }
+
+  /* ---- print = expand all ---- */
+  function wirePrint() {
+    window.addEventListener("beforeprint", function () { allDetails().forEach(function (d) { d.open = true; }); });
+  }
+
+  /* ---- initial hash ---- */
+  function handleInitialHash() {
+    if (location.hash.length > 1) {
+      var id = decodeURIComponent(location.hash.slice(1));
+      setTimeout(function () { revealAndScroll(id); }, 60);
+    }
+  }
+
+  /* ---- mermaid (CDN, graceful fallback to source) ---- */
+  function initMermaid() {
+    var blocks = document.querySelectorAll(".mermaid");
+    if (!blocks.length) return;
+    // stash source for fallback
+    blocks.forEach(function (b) { if (!b.dataset.src) b.dataset.src = b.textContent; });
+    var theme = document.documentElement.getAttribute("data-theme") === "dark" ? "dark" : "default";
+    var s = document.createElement("script");
+    s.type = "module";
+    s.textContent =
+      'import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.esm.min.mjs";' +
+      'mermaid.initialize({ startOnLoad: false, theme: "' + theme + '", securityLevel: "loose", flowchart:{useMaxWidth:true}, themeVariables:{ fontFamily: "inherit" } });' +
+      'try { await mermaid.run({ querySelector: ".mermaid" }); }' +
+      'catch (e) { document.querySelectorAll(".mermaid").forEach(function(b){ var f=b.closest("figure.diagram"); if(f) f.classList.add("failed"); }); }';
+    s.onerror = mermaidFail;
+    document.body.appendChild(s);
+    // safety net: if CDN blocked, reveal fallbacks after a delay
+    setTimeout(function () {
+      document.querySelectorAll(".mermaid").forEach(function (b) {
+        if (!b.querySelector("svg")) { var f = b.closest("figure.diagram"); if (f) f.classList.add("failed"); }
+      });
+    }, 4000);
+  }
+  function mermaidFail() {
+    document.querySelectorAll("figure.diagram").forEach(function (f) { f.classList.add("failed"); });
+  }
+
+  function escapeHTML(s) { var d = document.createElement("div"); d.textContent = s; return d.innerHTML; }
+})();
+
+  </script>
+</body>
+</html>
