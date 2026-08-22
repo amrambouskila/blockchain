@@ -25,6 +25,18 @@
 - Project scaffolded with full documentation infrastructure (CLAUDE.md, master plan, status, versions, .claude hooks/commands/skills)
 - Bitcoin Core directory gitignored (it's a reference clone with its own .git)
 
+## Security
+- Security requirements are documented in CLAUDE.md / AGENTS.md `<security>` (section 9a) and the master plan's Security section; every phase gate now requires a green SAST stage and documented injection-safe input boundaries.
+- Wired:
+  - `sast` job in `.github/workflows/ci.yml` (`needs: [lint]`): CodeQL (python), Semgrep (`uvx semgrep scan`, `auto` + `p/owasp-top-ten` + `p/python`, severity ERROR, SARIF uploaded to code scanning), `gitleaks/gitleaks-action@v2`, `uv run --with pip-audit pip-audit`
+  - ruff `S` (flake8-bandit) family in `pyproject.toml` lint select; ruff clean, no `noqa`
+- Pending:
+  - `test` job chained after `sast` (no test suite yet, so no `S101` per-file ignore under `tests/` yet)
+  - Custom gitleaks rule for 64-hex / WIF private keys (`.gitleaks.toml`); `.semgrep/` project rules
+  - Trivy in `docker-build` once a Dockerfile exists (Phase 2+)
+  - Local Semgrep/gitleaks runs: not executed on this machine yet; gitleaks needs a local binary install
+  - Phase 1 boundary fixes from the inventory: path-containment check on `rpc_credentials_file`, percent-encoded RPC URL credentials, typed validation of RPC responses and send parameters, `logging` instead of `print` for errors, removal of the `random.getrandbits` entropy mix (`S311`)
+
 ## What's Next
 - Add type annotations and `from __future__ import annotations` to `bitcoin_wallet.py`
 - Extract magic numbers to named constants

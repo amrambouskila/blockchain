@@ -110,7 +110,7 @@ This is a **blockchain learning and research project**, not a production cryptoc
 - **Python 3.11+**
 - **`from __future__ import annotations`** at the top of every module
 - Full type annotations on every function signature
-- **ruff** for lint + format (`line-length = 120`, rules: `["E", "F", "I", "N", "UP", "ANN"]`)
+- **ruff** for lint + format (`line-length = 120`, rules: `["E", "F", "I", "N", "UP", "ANN", "S"]` -- `S` is the flake8-bandit family, see section 9a)
 - **pytest** with `pytest-cov` for testing
 - **No `Any` type** without explicit justification
 - **One class per file** -- `BitcoinWallet` lives in `bitcoin_wallet.py`, future classes get their own files
@@ -238,6 +238,10 @@ pytest tests/ -v --cov=blockchain_dev/bitcoin_wallet_dev
 # Lint
 ruff check .
 ruff format --check .
+
+# SAST (same set the CI `sast` job runs -- see section 9a)
+uvx ruff check . && uvx semgrep scan --config auto --config p/owasp-top-ten --config p/python --severity ERROR --error && uv run --with pip-audit pip-audit && gitleaks detect --no-git --redact
+# gitleaks is a standalone binary (not on PyPI) -- install it locally; the other three run through uv.
 ```
 
 </commands>
@@ -269,6 +273,45 @@ After every significant change:
 
 ---
 
+<security>
+
+## 9a. Security -- SAST Scanning & Injection Safety (Non-Negotiable)
+
+Per global CLAUDE.md section 19. This is a wallet: the attack surface is small, but every boundary touches private keys or signed transactions, so the bar is production-grade regardless of the "educational" label.
+
+### SAST scanning
+- **Wired.** `.github/workflows/ci.yml` (GitHub Actions -- public project) has a `sast` job (`needs: [lint]`) that fails on any HIGH/CRITICAL finding. When the `test` job lands it goes after `sast` (`needs: [sast]`) so the order stays `lint -> sast -> test`.
+- Tools as wired: **CodeQL** (`github/codeql-action` init -> analyze, language `python`, category `codeql`); **Semgrep** via `uvx semgrep scan --config auto --config p/owasp-top-ten --config p/python --severity ERROR --error --sarif`, SARIF uploaded through `github/codeql-action/upload-sarif` (category `semgrep`, `if: !cancelled()`), with a separate step failing the job on findings; **gitleaks** via `gitleaks/gitleaks-action@v2` on a `fetch-depth: 0` checkout (default ruleset -- the custom 64-hex/WIF private-key rule is pending; add it as `.gitleaks.toml` when the first test vector is committed); **`pip-audit`** via `uv run --with pip-audit pip-audit`. Job-level `permissions: contents: read, security-events: write, actions: read`.
+- **ruff `S` rules** are wired: `pyproject.toml` lint select is `["E", "F", "I", "N", "UP", "ANN", "S"]` and the tree is clean with no `noqa`. `S101` gets a per-file ignore under `tests/` when the test suite is created (no `tests/` exists yet).
+- Pending: project Semgrep rules in `.semgrep/` (none yet -- registry rulesets only); **Trivy** (`aquasecurity/trivy-action`, `--severity HIGH,CRITICAL --exit-code 1`) in `docker-build` once a Dockerfile exists (Phase 2+) -- no Dockerfile today, so no Trivy.
+- Local reproduction (see section 7): `uvx ruff check . && uvx semgrep scan --config auto --config p/owasp-top-ten --config p/python --severity ERROR --error && uv run --with pip-audit pip-audit && gitleaks detect --no-git --redact`.
+
+### Injection safety -- input boundary inventory
+
+| Boundary | Where | Injection classes | Required defense |
+|---|---|---|---|
+| RPC credentials file | `BitcoinWallet.get_rpc_credentials()` -- `rpc_credentials_file` ctor arg, `json.load`/`json.dump` | Path traversal, unsafe deserialization, secrets | Resolve path and require `resolved.is_relative_to(base.resolve())` (base = wallet directory); `json` only, never `pickle`; validate the decoded dict against a typed schema (`rpc_user`/`rpc_password` as `str`, nothing else) before use; file written with owner-only permissions; file stays gitignored |
+| RPC URL construction | `BitcoinWallet.connect_to_rpc()` -- `f'http://{rpc_user}:{rpc_password}@127.0.0.1:8332'` | Header/URL injection, SSRF, secrets | Percent-encode user and password (`urllib.parse.quote`) so `@`, `/`, `:`, CR/LF in a credential cannot rewrite the host; host/port are constants, never taken from the credentials file; credentials never echoed in logs or exceptions |
+| Bitcoin Core JSON-RPC responses | `listunspent`, `createrawtransaction`, `signrawtransactionwithkey`, `sendrawtransaction` via `AuthServiceProxy` | Unsafe deserialization, resource exhaustion, log injection | Treat the node as untrusted: validate UTXO entries (`txid` 64-hex, `vout` int >= 0, `amount` `Decimal`) before arithmetic or re-submission; cap the number of UTXOs iterated; `JSONRPCException` messages are logged via structured logging with CR/LF stripped, never interpolated into a shell or a further RPC call |
+| Send parameters | `create_and_send_transaction(recipient_address, amount)` and `__main__` | Input validation (address/amount), resource exhaustion | `recipient_address` must pass Base58Check decode + version-byte check (Bech32 validation added in Phase 2) before being placed in an output map; `amount` is `Decimal`, bounded `> 0` and `<= balance - fee`; never build the outputs dict from unvalidated strings |
+| Error output | `print(f"... {e}")` in every RPC wrapper | Secrets leakage, log injection | Exceptions never contain the private key or RPC password; replace `print` with `logging` using structured fields; `signrawtransactionwithkey` errors are logged without the arguments |
+| Entropy | `generate_private_key()` | Weak randomness (ruff `S311`) | `secrets.token_bytes` / `os.urandom` only; the `random.getrandbits` mix is flagged by `S311` and is removed as part of Phase 1 cleanup, not suppressed |
+
+Planned boundaries (documented here when built, per the master plan):
+- **Phase 2:** BIP-39 mnemonic input (wordlist allowlist + checksum before any derivation; never logged), encrypted wallet file at rest (AES-256-GCM via `cryptography`, authenticated decrypt before parsing, path-traversal check on the wallet path), `estimatesmartfee` RPC responses (validated numeric bounds).
+- **Phase 3:** FastAPI REST + WebSocket node API (Pydantic request models, body-size limits, pagination caps, explicit CORS allowlist), P2P TCP layer (bounded message framing, max block/tx size, per-peer rate limits, no deserialization beyond a typed wire schema), script engine (op-count and stack-size limits, no `eval`/`exec`, interpreter over an explicit opcode allowlist).
+
+### Project-specific additions
+- `blockchain_dev/bitcoin_blockchain_dev/` (Bitcoin Core clone) is excluded from Semgrep/gitleaks paths -- it is read-only reference material, not project code, and is gitignored.
+- Private keys are the highest-value secret in the repo: gitleaks must carry a custom rule for 64-hex strings and WIF-prefixed strings in any committed file (pending -- the wired `gitleaks-action` currently runs its default ruleset); a test vector key is allowed only in `tests/` with an inline `# gitleaks:allow` and the published source of the vector.
+- Never send a mainnet transaction from CI or from a test. Tests mock `AuthServiceProxy`; the `sast` job has no network access to a node.
+
+The task-completion self-audit (section 11) now includes a **Security check** item.
+
+</security>
+
+---
+
 <definition_of_done>
 
 ## 10. Phase Completion Gate -- Phase 1
@@ -280,7 +323,9 @@ Phase 1 is done when:
 - [ ] pytest test suite exists with tests for: key generation, public key derivation, address generation
 - [ ] Tests use known Bitcoin test vectors for validation
 - [ ] No magic numbers -- fee, network byte, etc. extracted to named constants
-- [ ] ruff passes cleanly
+- [ ] ruff passes cleanly (including `S` rules)
+- [ ] SAST green with zero HIGH/CRITICAL findings (`sast` job in `.github/workflows/ci.yml`)
+- [ ] All input boundaries injection-safe and documented in `<security>` (section 9a)
 - [ ] `docs/status.md` and `docs/versions.md` are current
 - [ ] README.md accurately describes the project and how to run it
 
@@ -298,6 +343,7 @@ At the end of every non-trivial task, run the universal self-audit checklist fro
 2. **Reference isolation check** -- No files under `bitcoin_blockchain_dev/` were modified.
 3. **RPC credential check** -- No RPC credentials committed or hard-coded.
 4. **Test vector check** -- If crypto operations were added/changed, are they validated against known test vectors?
+5. **Security check** -- Local SAST clean; every touched input boundary names its injection class(es) and defense; `<security>` section updated if a boundary was added.
 
 ---
 

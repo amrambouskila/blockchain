@@ -42,14 +42,18 @@ jobs:
 
       - name: Bump pyproject.toml
         id: bump
+        env:
+          BUMP: ${{ inputs.bump }}
         run: |
-          uv version --bump "${{ inputs.bump }}"
+          uv version --bump "$BUMP"
           new_version=$(uv version --short)
           echo "new_version=v${new_version}" >> "$GITHUB_OUTPUT"
 
       - name: Commit + tag
+        env:
+          NEW_VERSION: ${{ steps.bump.outputs.new_version }}
         run: |
-          version="${{ steps.bump.outputs.new_version }}"
+          version="$NEW_VERSION"
           git add pyproject.toml
           if [ -f uv.lock ]; then
             git add uv.lock

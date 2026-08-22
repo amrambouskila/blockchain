@@ -100,12 +100,15 @@ The existing `bitcoin_wallet.py` implements a `BitcoinWallet` class with:
 5. Validate address generation against published test addresses
 6. Add ruff configuration
 7. Handle edge cases (zero balance, invalid addresses, RPC connection failures)
+8. ~~Wire `sast` stage in `.github/workflows/ci.yml`~~ -- DONE (CodeQL + Semgrep SARIF + gitleaks-action + `pip-audit`; ruff `S` in lint). Remaining: `test` job chained after `sast`; custom gitleaks 64-hex/WIF rule; Trivy in `docker-build` once a Dockerfile exists
 
 ### Gate Criteria
 - All functions typed and documented
 - Test suite passes with 100% coverage on wallet logic
 - ruff clean
 - At least 3 known test vectors validated for key-to-address derivation
+- SAST stage green -- zero HIGH/CRITICAL findings; MEDIUM findings triaged with written justification
+- New input boundaries in this phase are injection-safe and documented in `CLAUDE.md` `<security>`
 
 ---
 
@@ -161,6 +164,8 @@ blockchain_dev/bitcoin_wallet_dev/
 - Multi-sig transactions verifiable against Bitcoin Core `verifymessage`
 - Wallet encryption round-trips without data loss
 - 100% test coverage
+- SAST stage green -- zero HIGH/CRITICAL findings; MEDIUM findings triaged with written justification
+- New input boundaries in this phase are injection-safe and documented in `CLAUDE.md` `<security>`
 
 ---
 
@@ -202,6 +207,8 @@ graph LR
 - Script engine validates P2PKH-style transactions
 - Full pytest suite validates each component in isolation
 - Integration test: 3-node network reaches consensus
+- SAST stage green -- zero HIGH/CRITICAL findings; MEDIUM findings triaged with written justification
+- New input boundaries in this phase are injection-safe and documented in `CLAUDE.md` `<security>`
 
 ---
 
@@ -229,6 +236,26 @@ graph LR
 - No private key exposure in logs, errors, or serialized state
 - Credentials (RPC, encryption keys) never committed to version control
 - Entropy from `secrets` / `os.urandom` only -- never `random` alone for crypto
+
+### Security -- SAST & Injection Safety (all phases)
+Per global CLAUDE.md section 19; the project-level boundary inventory lives in `CLAUDE.md` `<security>` (section 9a) and is the source of truth -- this section summarizes, it does not duplicate.
+
+**SAST is a mandatory pipeline stage from the first pipeline onward.** `.github/workflows/ci.yml` (GitHub Actions, public project) carries a `sast` job between `lint` and `test` in every phase; it fails on HIGH/CRITICAL, MEDIUM findings are triaged with a written justification. The `sast` job is wired today (`needs: [lint]`); `test` onward are not yet present.
+
+```mermaid
+flowchart LR
+    LINT[lint<br/>ruff incl. S rules] --> SAST[sast<br/>Semgrep + CodeQL<br/>pip-audit + gitleaks]
+    SAST --> TEST[test<br/>pytest --cov, JUnit]
+    TEST --> COV[coverage gate<br/>100%]
+    COV --> BUILD[build<br/>uv build]
+    BUILD --> DOCKER[docker-build<br/>Trivy HIGH/CRITICAL<br/>Phase 2+]
+```
+
+Tool set as wired: Semgrep (`uvx semgrep scan`, `auto` + `p/owasp-top-ten` + `p/python`, severity ERROR) with SARIF upload to GitHub code scanning; CodeQL (`python`); ruff `S` family in `lint`; `uv run --with pip-audit pip-audit`; `gitleaks/gitleaks-action` (custom 64-hex / WIF private-key rule still pending); Trivy on the image once Phase 2 introduces a Dockerfile (pending -- no Dockerfile). The Bitcoin Core clone under `blockchain_dev/bitcoin_blockchain_dev/` is excluded from all scans (read-only reference, gitignored).
+
+Injection-safety principles per component:
+- **Wallet (Phase 1-2):** RPC credentials file is path-checked and schema-validated `json`, never `pickle`; credentials are percent-encoded into the RPC URL and host/port are constants; every JSON-RPC response (`listunspent`, raw-tx calls, `estimatesmartfee`) is validated by shape and bounds before arithmetic or re-submission; `recipient_address` is checksum-validated and `amount` is a bounded `Decimal` before any output map is built; errors go through structured logging with CR/LF stripped and never carry keys or passwords; entropy is `secrets`/`os.urandom` only (`S311`). Phase 2 adds mnemonic wordlist/checksum validation and authenticated (AES-256-GCM) decrypt of the wallet file before parsing.
+- **Custom node (Phase 3):** FastAPI REST/WebSocket boundary uses Pydantic request models, body-size limits, pagination caps, and an explicit CORS allowlist; the P2P layer uses bounded message framing, max block/tx sizes, per-peer rate limits, and a typed wire schema (no generic deserialization); the script engine is an interpreter over an explicit opcode allowlist with op-count and stack-size limits -- never `eval`/`exec`.
 
 ---
 
