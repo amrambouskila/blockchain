@@ -26,6 +26,12 @@
 - Bitcoin Core directory gitignored (it's a reference clone with its own .git)
 
 ## Security
+
+### Verified state (2026-08-24)
+
+- **Semgrep: clean.** Verified locally by running this repo's own CI command against the working tree (0 findings). The invocation itself was broken before today — `semgrep ci` rejects `--severity`/`--error` and exited 2 without scanning.
+
+- Not run locally: gitleaks and Trivy are not part of any project toolchain here; both were exercised through their official images during verification, and CI runs them on every pipeline.
 - Security requirements are documented in CLAUDE.md / AGENTS.md `<security>` (section 9a) and the master plan's Security section; every phase gate now requires a green SAST stage and documented injection-safe input boundaries.
 - Wired:
   - `sast` job in `.github/workflows/ci.yml` (`needs: [lint]`): CodeQL (python), Semgrep (`uvx semgrep scan`, `auto` + `p/owasp-top-ten` + `p/python`, severity ERROR, SARIF uploaded to code scanning), `gitleaks/gitleaks-action@v2`, `uv run --with pip-audit pip-audit`

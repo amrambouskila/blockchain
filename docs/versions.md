@@ -1,5 +1,14 @@
 # Version History
 
+## v0.2.1 — 2026-08-24 (unreleased)
+
+### CI hardening + dependency remediation (2026-08-24)
+
+- **Semgrep invocation corrected.** The job used `semgrep ci` with `--severity` and `--error`, which that subcommand does not accept — it exits 2 with a usage error before scanning. Switched to `semgrep scan`, which supports both.
+- **Release workflow hardened against script injection.** `${{ inputs.bump }}` and `${{ steps.bump.outputs.new_version }}` were interpolated directly into `run:` blocks, where the value becomes shell code. Both now pass through `env:` and are read as quoted shell variables. The input is `type: choice`, so this was not exploitable today — it is the pattern that breaks the moment the input type changes.
+
+---
+
 ## v0.1.2
 - Security documentation added:
   - `<security>` section in CLAUDE.md / AGENTS.md -- SAST stage requirement (`sast` job between `lint` and `test` in `.github/workflows/ci.yml`), input-boundary inventory with injection classes and required defenses, ruff `S` rules in the required lint select
