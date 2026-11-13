@@ -9,7 +9,7 @@
 - Phase 1 stays at the repo root: `bitcoin_wallet.py` and `constants.py`. `create_and_send_transaction` still asks Bitcoin Core at `127.0.0.1:8332` to sign and broadcast. Tests mock that RPC client and never touch mainnet.
 - Phase 2 lives in the flat package `blockchain_dev/bitcoin_wallet_dev/src/btc_wallet/`. It covers BIP-32, BIP-39 (12 or 24 English words), BIP-44, Bech32 and Bech32m, a P2SH multisig script, AES-256-GCM wallet files, coin selection, fee-estimate parsing, and a local educational signer. That signer is not used on the Phase 1 send path.
 - Phase 3 lives in `blockchain_dev/edu_node/src/edu_node/`. It is a small chain, not a Bitcoin clone: 80-byte headers, double-SHA256 proof of work, a short script allowlist, a mempool, loopback peers, and a FastAPI app. The chain file is `chain.json`. Docker stores it on the named volume `edu_chain`. There is no Postgres.
-- `uv run pytest` passed on this machine: 453 tests, coverage 100% on `bitcoin_wallet`, `constants`, `btc_wallet`, and `edu_node`.
+- `uv run pytest` passed on this machine: 453 tests, coverage 100% on `bitcoin_wallet`, `constants`, `btc_wallet`, and `edu_node`. The Windows `icacls` path is a `PureWindowsPath`, so the Linux test job can build it.
 - GitHub Actions runs lint, then sast, then test (JUnit), then `docker-build` with Trivy. The image was built on this machine as `blockchain-edu-node:ci`. A short run returned health 200 and a genesis tip, and the container was removed.
 
 ## Decisions that differ from the first plan

@@ -5,6 +5,7 @@
 ### Phase 2 wallet and Phase 3 educational node (2026-11-13)
 
 - The dependency audit ignores only PYSEC-2026-1325. That id is `ecdsa` 0.19.2, reported twice, and the maintainers will not fix it. `.trivyignore` names CVE-2024-23342 and the Debian ids that have no fixed package. `ignore-unfixed` stays off, so a new high finding still fails the image scan.
+- The Windows `icacls` location is a `PureWindowsPath`. Linux CI can exercise that branch. `Path` would try to build a `WindowsPath` there, and Python 3.13 rejects that.
 
 - Phase 2 is the flat package `btc_wallet`: BIP-32, BIP-39, BIP-44, Bech32 and Bech32m, P2SH multisig checked by script bytes, AES-256-GCM wallet files, coin selection, fee-estimate parsing, and an educational signer. Phase 1 `create_and_send_transaction` still signs through Bitcoin Core.
 - Phase 3 is `edu_node`: proof of work, a script allowlist, a mempool, loopback peers, and a FastAPI app. The tip is the chain with the most work, and equal work keeps the first tip. Coinbase outputs spend in the next block. A new tip sends the whole chain.

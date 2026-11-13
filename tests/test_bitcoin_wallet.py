@@ -417,14 +417,14 @@ def test_windows_acl_uses_icacls(monkeypatch: pytest.MonkeyPatch, wallet_home: P
 
     monkeypatch.setattr(subprocess, "run", fake_run)
     BitcoinWallet.get_rpc_credentials("win.json")
-    assert seen[0][0] == str(Path(r"D:\Windows\System32\icacls.exe"))
+    assert seen[0][0] == "D:\\Windows\\System32\\icacls.exe"
     assert seen[0][2:] == ["/inheritance:r", "/grant:r", "tester:(R,W)"]
 
 
 def test_windows_icacls_defaults_system_root(monkeypatch: pytest.MonkeyPatch) -> None:
     """Without SystemRoot, icacls is resolved under C:\\Windows."""
     monkeypatch.delenv("SystemRoot", raising=False)
-    assert BitcoinWallet._windows_icacls_path() == Path(r"C:\Windows") / "System32" / "icacls.exe"
+    assert str(BitcoinWallet._windows_icacls_path()) == "C:\\Windows\\System32\\icacls.exe"
 
 
 def test_windows_icacls_rejects_unexpected_system_root(monkeypatch: pytest.MonkeyPatch) -> None:

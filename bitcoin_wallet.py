@@ -12,7 +12,7 @@ import secrets
 import subprocess
 from collections.abc import Callable
 from decimal import Decimal, InvalidOperation
-from pathlib import Path
+from pathlib import Path, PureWindowsPath
 from typing import TypeVar
 from urllib.parse import quote, urlunsplit
 
@@ -413,12 +413,14 @@ class BitcoinWallet:
         path.chmod(CREDENTIALS_FILE_MODE)
 
     @staticmethod
-    def _windows_icacls_path() -> Path:
+    def _windows_icacls_path() -> PureWindowsPath:
         """Return icacls.exe when SystemRoot is a drive folder named Windows."""
         system_root = os.environ.get("SystemRoot", r"C:\Windows")
         if _WINDOWS_ROOT_RE.fullmatch(system_root) is None:
             raise OSError("The Windows directory could not be used to restrict the credentials file.")
-        return Path(system_root) / "System32" / "icacls.exe"
+        # Path follows the machine's own flavour. This location is always a Windows
+        # path, including when the check runs on Linux.
+        return PureWindowsPath(system_root) / "System32" / "icacls.exe"
 
     @staticmethod
     def _restrict_windows_acl(path: Path) -> None:
