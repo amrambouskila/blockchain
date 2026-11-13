@@ -56,8 +56,50 @@ jobs:
       - uses: gitleaks/gitleaks-action@v2
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITLEAKS_CONFIG: .gitleaks.toml
       - name: Dependency audit
         # `uvx pip-audit` would audit pip-audit's own isolated tool environment, not this
-        # project's dependencies. The project declares none today, so both forms currently
-        # report the same thing -- this form keeps the audit correct once dependencies land.
+        # project's dependencies. `uv run --with pip-audit` audits the project lockfile.
         run: uv run --with pip-audit pip-audit
+
+  test:
+    runs-on: ubuntu-latest
+    needs: [sast]
+    permissions:
+      contents: read
+      checks: write
+      pull-requests: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v3
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+      - name: Test
+        run: uv run pytest
+      - name: Publish test report
+        uses: dorny/test-reporter@v1
+        if: ${{ !cancelled() }}
+        with:
+          name: wallet tests
+          path: .runtime/junit-unit.xml
+          reporter: java-junit
+
+  docker-build:
+    runs-on: ubuntu-latest
+    needs: [test]
+    permissions:
+      contents: read
+      security-events: write
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build image
+        run: docker build -t blockchain-edu-node:ci .
+      - name: Trivy
+        uses: aquasecurity/trivy-action@v0.36.0
+        with:
+          image-ref: blockchain-edu-node:ci
+          format: table
+          exit-code: "1"
+          severity: CRITICAL,HIGH
+          vuln-type: os,library

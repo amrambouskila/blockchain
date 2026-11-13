@@ -84,23 +84,23 @@ gantt
 - Retrieve wallet balance via UTXO queries
 
 ### Current Implementation
-The existing `bitcoin_wallet.py` implements a `BitcoinWallet` class with:
-- `generate_private_key()` -- 256-bit key from mixed entropy sources
+Phase 1 code lives at the repo root, not under `blockchain_dev/bitcoin_wallet_dev/` (that path is the planned layout for later phases). `bitcoin_wallet.py` implements `BitcoinWallet`, and `constants.py` holds the named fee, network, and RPC values:
+- `generate_private_key()` -- 32-byte key from `secrets` and `os.urandom`, inside the secp256k1 order
 - `derive_public_key()` -- compressed ECDSA public key (secp256k1)
 - `generate_address()` -- P2PKH address via SHA-256 + RIPEMD-160 + Base58Check
-- `get_balance()` -- UTXO-based balance query via RPC
-- `create_raw_transaction()` / `sign_transaction()` / `broadcast_transaction()` -- full tx lifecycle
-- `create_and_send_transaction()` -- high-level send operation
+- `get_balance()` -- UTXO-based balance query via RPC, returned as `Decimal`
+- `create_raw_transaction()` / `sign_transaction()` / `broadcast_transaction()` -- full tx lifecycle, with checked RPC responses
+- `create_and_send_transaction()` -- first-fit send, returns the transaction id
 
-### Remaining Phase 1 Tasks
-1. Add `from __future__ import annotations` and full type annotations
-2. Extract magic numbers to named constants (network byte `0x00`, fee `0.0001`)
-3. Add docstrings to all methods
-4. Create pytest test suite with known Bitcoin test vectors
-5. Validate address generation against published test addresses
-6. Add ruff configuration
-7. Handle edge cases (zero balance, invalid addresses, RPC connection failures)
-8. ~~Wire `sast` stage in `.github/workflows/ci.yml`~~ -- DONE (CodeQL + Semgrep SARIF + gitleaks-action + `pip-audit`; ruff `S` in lint). Remaining: `test` job chained after `sast`; custom gitleaks 64-hex/WIF rule; Trivy in `docker-build` once a Dockerfile exists
+### Phase 1 Tasks
+1. ~~Add `from __future__ import annotations` and full type annotations~~ -- DONE
+2. ~~Extract magic numbers to named constants (network byte `0x00`, fee `0.0001`)~~ -- DONE (`constants.py`)
+3. ~~Add docstrings to all methods~~ -- DONE
+4. ~~Create pytest test suite with known Bitcoin test vectors~~ -- DONE
+5. ~~Validate address generation against published test addresses~~ -- DONE
+6. ~~Add ruff configuration~~ -- DONE
+7. ~~Handle edge cases (zero balance, invalid addresses, RPC connection failures)~~ -- DONE
+8. ~~Wire `sast` stage in `.github/workflows/ci.yml`~~ -- DONE (CodeQL + Semgrep SARIF + gitleaks-action + `pip-audit`; ruff `S` in lint). The `test` job is chained after `sast` and publishes JUnit. `.gitleaks.toml` adds the 64-hex and WIF rules. `docker-build` runs Trivy after `test`. Local ruff and gitleaks are clean. Semgrep at error severity is clean on tracked files and on a copy of the untracked wallet and node source (39 Python files; Semgrep skips `tests/` by default). `pip-audit` still reports unfixed PYSEC-2026-1325 in `ecdsa` 0.19.2, so the SAST gate line below is not met yet. A local Trivy scan of `blockchain-edu-node:ci` exits 1 for that same advisory and for Debian 13 packages that have no fixed version. `ignore-unfixed` is not set.
 
 ### Gate Criteria
 - All functions typed and documented
@@ -124,7 +124,11 @@ The existing `bitcoin_wallet.py` implements a `BitcoinWallet` class with:
 - Intelligent UTXO selection (coin selection algorithms)
 - Transaction fee estimation via RPC `estimatesmartfee`
 
-### Module Structure (planned)
+### Module Structure
+
+The package is flat: `blockchain_dev/bitcoin_wallet_dev/src/btc_wallet/`, one class per file. The nested `keys/` `address/` `wallet/` tree below was the first sketch and was not built. Multisig is checked by rebuilding the script and the P2SH address, not by Bitcoin Core `verifymessage`. The encrypted wallet is a file (AES-256-GCM), not Postgres. The local signer is educational and is not used by Phase 1 `create_and_send_transaction`.
+
+### First sketch (not built)
 ```
 blockchain_dev/bitcoin_wallet_dev/
 ├── src/
@@ -161,7 +165,7 @@ blockchain_dev/bitcoin_wallet_dev/
 - HD wallet generates correct addresses matching BIP-32 test vectors
 - Mnemonic recovery produces identical wallet state
 - SegWit addresses validate against BIP-173 test vectors
-- Multi-sig transactions verifiable against Bitcoin Core `verifymessage`
+- Multi-sig scripts match the independently built redeem script and P2SH address (not Bitcoin Core `verifymessage`)
 - Wallet encryption round-trips without data loss
 - 100% test coverage
 - SAST stage green -- zero HIGH/CRITICAL findings; MEDIUM findings triaged with written justification
@@ -179,7 +183,7 @@ Build a simplified blockchain from scratch (not a Bitcoin clone -- an educationa
 - Merkle tree construction and verification
 - Mempool management and transaction relay
 - Basic peer-to-peer networking
-- Chain selection rules (longest valid chain)
+- Chain selection rules (most cumulative work; equal work keeps the first tip)
 
 ### Architecture (planned)
 
@@ -199,6 +203,9 @@ graph LR
     MINER[Miner] -->|HTTP/WS| API
     PEER[Peer Nodes] <-->|TCP| P2P
 ```
+
+### What shipped
+The node is `blockchain_dev/edu_node`. Coinbase outputs can be spent in the next block, not after 100 blocks. A new tip is sent as the whole chain. Persistence is `chain.json` on the Docker volume `edu_chain`, not Postgres. Host port `8224` publishes container port `8000`. The peer port is not published.
 
 ### Gate Criteria
 - Nodes can mine blocks with valid PoW
@@ -240,18 +247,17 @@ graph LR
 ### Security -- SAST & Injection Safety (all phases)
 Per global CLAUDE.md section 19; the project-level boundary inventory lives in `CLAUDE.md` `<security>` (section 9a) and is the source of truth -- this section summarizes, it does not duplicate.
 
-**SAST is a mandatory pipeline stage from the first pipeline onward.** `.github/workflows/ci.yml` (GitHub Actions, public project) carries a `sast` job between `lint` and `test` in every phase; it fails on HIGH/CRITICAL, MEDIUM findings are triaged with a written justification. The `sast` job is wired today (`needs: [lint]`); `test` onward are not yet present.
+**SAST is a mandatory pipeline stage from the first pipeline onward.** `.github/workflows/ci.yml` (GitHub Actions, public project) carries a `sast` job between `lint` and `test` in every phase; it fails on HIGH/CRITICAL, MEDIUM findings are triaged with a written justification. `lint`, `sast`, `test`, and `docker-build` are wired. There is no separate `uv build` job. `docker-build` was run on this machine: the image builds, `/health` returns 200, and Trivy exits 1 on unfixed high findings.
 
 ```mermaid
 flowchart LR
     LINT[lint<br/>ruff incl. S rules] --> SAST[sast<br/>Semgrep + CodeQL<br/>pip-audit + gitleaks]
     SAST --> TEST[test<br/>pytest --cov, JUnit]
     TEST --> COV[coverage gate<br/>100%]
-    COV --> BUILD[build<br/>uv build]
-    BUILD --> DOCKER[docker-build<br/>Trivy HIGH/CRITICAL<br/>Phase 2+]
+    COV --> DOCKER[docker-build<br/>Trivy HIGH/CRITICAL]
 ```
 
-Tool set as wired: Semgrep (`uvx semgrep scan`, `auto` + `p/owasp-top-ten` + `p/python`, severity ERROR) with SARIF upload to GitHub code scanning; CodeQL (`python`); ruff `S` family in `lint`; `uv run --with pip-audit pip-audit`; `gitleaks/gitleaks-action` (custom 64-hex / WIF private-key rule still pending); Trivy on the image once Phase 2 introduces a Dockerfile (pending -- no Dockerfile). The Bitcoin Core clone under `blockchain_dev/bitcoin_blockchain_dev/` is excluded from all scans (read-only reference, gitignored).
+Tool set as wired: Semgrep (`uvx semgrep scan`, `auto` + `p/owasp-top-ten` + `p/python`, severity ERROR) with SARIF upload to GitHub code scanning; CodeQL (`python`); ruff `S` family in `lint`; `uv run --with pip-audit pip-audit`; `gitleaks/gitleaks-action` with `.gitleaks.toml` (64-hex and WIF rules; `uv.lock` hashes allowlisted). Trivy runs in `docker-build` (`aquasecurity/trivy-action@v0.36.0`, severity CRITICAL,HIGH, exit code 1, `ignore-unfixed` not set). The local image scan exits 1. The runtime image drops the base `pip` tree. What remains has no fixed release: `ecdsa` CVE-2024-23342, and the Debian packages listed in `docs/versions.md`. The Bitcoin Core clone under `blockchain_dev/bitcoin_blockchain_dev/` is excluded from all scans (read-only reference, gitignored). `pip-audit` still reports unfixed PYSEC-2026-1325 in `ecdsa` 0.19.2, so no phase SAST line is met.
 
 Injection-safety principles per component:
 - **Wallet (Phase 1-2):** RPC credentials file is path-checked and schema-validated `json`, never `pickle`; credentials are percent-encoded into the RPC URL and host/port are constants; every JSON-RPC response (`listunspent`, raw-tx calls, `estimatesmartfee`) is validated by shape and bounds before arithmetic or re-submission; `recipient_address` is checksum-validated and `amount` is a bounded `Decimal` before any output map is built; errors go through structured logging with CR/LF stripped and never carry keys or passwords; entropy is `secrets`/`os.urandom` only (`S311`). Phase 2 adds mnemonic wordlist/checksum validation and authenticated (AES-256-GCM) decrypt of the wallet file before parsing.
@@ -263,7 +269,7 @@ Injection-safety principles per component:
 
 | Decision | Choice | Rationale |
 |---|---|---|
-| Language | Python 3.11+ | Educational clarity, rich crypto ecosystem |
+| Language | Python 3.13+ | Matches `requires-python` in `pyproject.toml` |
 | ECDSA library | `ecdsa` | Pure Python, well-audited, secp256k1 support |
 | RPC client | `python-bitcoinrpc` | Standard Bitcoin Core RPC integration |
 | Base58 | `base58` | Lightweight, correct implementation |

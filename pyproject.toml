@@ -3,6 +3,16 @@ name = "blockchain"
 version = "0.2.0"
 description = "Blockchain experiments — bitcoin wallet and related cryptocurrency tooling."
 requires-python = ">=3.13"
+dependencies = [
+    "base58>=2.1",
+    "bech32>=1.2.0",
+    "cryptography>=50.0.2",
+    "ecdsa>=0.18",
+    "fastapi>=0.162.5",
+    "mnemonic>=0.21",
+    "python-bitcoinrpc>=1.0",
+    "uvicorn[standard]>=0.54.0",
+]
 
 [tool.ruff]
 line-length = 120
@@ -10,3 +20,41 @@ target-version = "py313"
 
 [tool.ruff.lint]
 select = ["E", "F", "I", "N", "UP", "ANN", "S"]
+
+[tool.ruff.lint.isort]
+known-first-party = ["bitcoin_wallet", "btc_wallet", "constants", "edu_node"]
+
+[tool.ruff.lint.per-file-ignores]
+"tests/**" = ["S101"]
+
+[tool.pytest.ini_options]
+pythonpath = [".", "blockchain_dev/bitcoin_wallet_dev/src", "blockchain_dev/edu_node/src"]
+testpaths = ["tests"]
+addopts = [
+    "--cov=bitcoin_wallet",
+    "--cov=constants",
+    "--cov=btc_wallet",
+    "--cov=edu_node",
+    "--cov-report=term-missing",
+    "--cov-fail-under=100",
+    "--junitxml=.runtime/junit-unit.xml",
+]
+
+[tool.coverage.run]
+source = ["bitcoin_wallet", "constants", "btc_wallet", "edu_node"]
+data_file = ".runtime/.coverage"
+branch = false
+
+[tool.coverage.report]
+exclude_lines = [
+    "pragma: no cover",
+    "if __name__ == .__main__.:",
+]
+fail_under = 100
+
+[dependency-groups]
+dev = [
+    "httpx2>=2.16.0",
+    "pytest>=7.0",
+    "pytest-cov>=4.0",
+]

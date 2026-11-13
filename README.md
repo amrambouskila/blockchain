@@ -10,20 +10,19 @@ A blockchain learning and research project focused on understanding cryptocurren
 
 ```
 blockchain/
+├── bitcoin_wallet.py              # BitcoinWallet class (Phase 1)
+├── constants.py                   # Named fee, network, and RPC values
+├── tests/                         # pytest suite, including published addresses
 ├── docs/                          # Project documentation
-├── .claude/                       # AI assistant configuration
-├── blockchain_dev/
-│   ├── bitcoin_blockchain_dev/    # Full Bitcoin Core C++ clone (read-only reference)
-│   └── bitcoin_wallet_dev/        # Active Python wallet development
-│       └── bitcoin_wallet.py      # BitcoinWallet class
-└── ...
+└── blockchain_dev/
+    └── bitcoin_blockchain_dev/    # Bitcoin Core C++ clone, when checked out (read-only)
 ```
 
 ### Two halves
 
-1. **Bitcoin Core Reference** (`bitcoin_blockchain_dev/`) -- a complete clone of the Bitcoin Core source code. This is studied for understanding how Bitcoin actually works at the C++ level. It is never modified.
+1. **Bitcoin Core Reference** (`blockchain_dev/bitcoin_blockchain_dev/`) -- a complete clone of the Bitcoin Core source code, checked out when you want to read it. It is never modified.
 
-2. **Python Wallet** (`bitcoin_wallet_dev/`) -- a from-scratch Python implementation of Bitcoin wallet operations. This is the active development target.
+2. **Python Wallet** (`bitcoin_wallet.py`) -- a from-scratch Python implementation of Bitcoin wallet operations. This is the active Phase 1 code, at the repo root.
 
 ---
 
@@ -64,37 +63,43 @@ graph TD
     P1[Phase 1<br/>Python Wallet Basics<br/>Key gen, addresses, transactions] --> P2[Phase 2<br/>Enhanced Wallet<br/>HD keys, SegWit, multi-sig]
     P2 --> P3[Phase 3<br/>Custom Blockchain<br/>PoW, P2P, scripting]
 
-    P1 -.->|current| P1
+    P3 -.->|code in place| P3
 ```
 
 | Phase | Focus | Status |
 |---|---|---|
-| **Phase 1** | Python wallet basics -- key generation, addresses, transactions | In progress |
-| **Phase 2** | Enhanced wallet -- BIP-32/39/44 HD keys, SegWit, multi-sig, encryption | Planned |
-| **Phase 3** | Custom blockchain -- PoW consensus, P2P, Merkle trees, scripting | Planned |
+| **Phase 1** | Python wallet basics -- key generation, addresses, transactions | Code in place. The security-scan line is still open. |
+| **Phase 2** | Enhanced wallet -- BIP-32/39/44 HD keys, SegWit, multi-sig, encryption | Code in place. Same open security-scan line. |
+| **Phase 3** | Educational chain -- proof of work, peers, a small script allowlist | Code in place. Same open security-scan line. |
 
 ---
 
 ## How to Run
 
 ### Prerequisites
-- Python 3.11+
-- Bitcoin Core running with RPC enabled (for transaction operations)
-- Python packages: `ecdsa`, `base58`, `python-bitcoinrpc`
+- Python 3.13+
+- [uv](https://docs.astral.sh/uv/) for installs and test runs
+- Bitcoin Core running with RPC enabled (for balance and transaction operations)
 
 ### Running the wallet
 
 ```bash
-cd blockchain_dev/bitcoin_wallet_dev
-python bitcoin_wallet.py
+uv sync --all-groups
+uv run python bitcoin_wallet.py
 ```
 
 This will:
-1. Generate a new private key (or load from provided key)
+1. Generate a new private key (or load from a provided key)
 2. Derive the compressed public key
 3. Generate a Bitcoin address
 4. Connect to Bitcoin Core via RPC
 5. Display the wallet address and balance
+
+It does not send a transaction. Tests do not need a node:
+
+```bash
+uv run pytest
+```
 
 ### Bitcoin Core RPC setup
 
@@ -109,6 +114,20 @@ rpcport=8332
 ```
 
 Or let the wallet auto-generate RPC credentials in `rpc_credentials.json`.
+
+### Running the educational node
+
+The node is a small chain for learning. It is not Bitcoin, and it does not hold real funds. From the repo root:
+
+```bat
+run_blockchain.bat
+```
+
+```bash
+./run_blockchain.sh
+```
+
+The API listens on `http://localhost:8224` (container port 8000). API docs are at `http://localhost:8224/docs`. The menu is `[k]` stop and keep images, `[q]` stop and remove images, `[r]` restart, `[v]` delete images, the chain volume, and host `.runtime`. Peers stay inside the container and are not published.
 
 ---
 

@@ -1,0 +1,13 @@
+.git
+.github
+.venv
+venv
+.runtime
+.pytest_cache
+__pycache__
+*.pyc
+blockchain_dev/bitcoin_blockchain_dev
+tests
+.env
+.env.*
+*.md

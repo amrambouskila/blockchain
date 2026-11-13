@@ -18,13 +18,19 @@ venv/
 # Environment
 .env
 .env.*
+!.env.example
 
 # OS
 .DS_Store
 Thumbs.db
 
-# pytest
+# pytest / coverage / test reports
 .pytest_cache/
+.runtime/
+.coverage
+htmlcov/
+coverage.xml
+junit-*.xml
 
 # Docker
 .docker/

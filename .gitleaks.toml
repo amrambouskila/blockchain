@@ -1,0 +1,28 @@
+title = "Blockchain wallet"
+
+[extend]
+useDefault = true
+
+[allowlist]
+description = "Package hashes, the virtualenv, and test-run output are not wallet keys"
+paths = [
+  '''(^|[\\/])uv\.lock$''',
+  '''(^|[\\/])\.venv([\\/]|$)''',
+  '''(^|[\\/])venv([\\/]|$)''',
+  '''(^|[\\/])__pycache__([\\/]|$)''',
+  '''(^|[\\/])\.pytest_cache([\\/]|$)''',
+  '''(^|[\\/])\.runtime([\\/]|$)''',
+  '''\.pyc$''',
+]
+
+[[rules]]
+id = "bitcoin-hex-private-key"
+description = "64 hex character secp256k1 private key. Word boundaries keep a 66-hex public key from matching. Lookaround is not used because this scanner's regex engine rejects it."
+regex = '''(?i)\b[0-9a-f]{64}\b'''
+tags = ["bitcoin", "private-key"]
+
+[[rules]]
+id = "bitcoin-wif-private-key"
+description = "WIF private key. Word boundaries keep a match inside a longer Base58 string, such as an xprv, from counting."
+regex = '''\b[5KL][1-9A-HJ-NP-Za-km-z]{50,51}\b'''
+tags = ["bitcoin", "private-key"]

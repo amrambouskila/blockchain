@@ -29,11 +29,18 @@ This is a **blockchain learning and research project**, not a production cryptoc
 - Not a fork of Bitcoin Core. The Bitcoin Core clone is READ-ONLY reference material.
 - Not a DeFi/smart-contract platform (that may come in later phases, but not now).
 
-**The two halves of this project:**
+**The parts of this project:**
 1. **Bitcoin Core reference** (`blockchain_dev/bitcoin_blockchain_dev/`) -- a full clone of the Bitcoin Core C++ codebase. This is for reading, studying, and cross-referencing. **DO NOT modify any file under this directory.** It has its own `.git` and is treated as an external dependency.
-2. **Python wallet** (`blockchain_dev/bitcoin_wallet_dev/`) -- the active development target. A Python implementation of Bitcoin wallet operations: key generation, address derivation, transaction creation, signing, and broadcasting.
+2. **Python wallet** (`bitcoin_wallet.py` and `constants.py` at the repo root, plus `blockchain_dev/bitcoin_wallet_dev/src/btc_wallet/`) -- key generation, addresses, HD keys, and an educational signer.
+3. **Educational node** (`blockchain_dev/edu_node/src/edu_node/`) -- a small chain with proof of work, peers, and an HTTP API. It is not a Bitcoin clone.
 
-**Current phase:** Phase 1 -- Python wallet basics.
+**Current phase:** Phase 3 code is in place. Phase 1 and Phase 2 wallet code are in place too. The SAST box on every phase stays open because `pip-audit` still reports unfixed PYSEC-2026-1325 in `ecdsa` 0.19.2.
+
+### Fleet Defaults: Dark Mode, Plain-English Communication, and Zero Lingering Ephemeral Files (Non-Negotiable)
+
+- **Default theme (Dark mode):** Set dark mode as the default theme for every application that I build or plan to build. Apply dark mode on initial load across all web, mobile, desktop, browser-extension, CLI/TUI, and Streamlit interfaces. If an application includes a theme toggle, persist the user selection and default to dark mode when unset. Configure all charts, canvases, maps, and 3D scenes to use dark-mode surfaces and high-contrast foreground tokens by default.
+- **Default communication style (Plain, approachable English — one step at a time):** Explain status updates, bugs, tools, verification steps, and decisions in clear, friendly everyday English — as if explaining to a newer programmer — even though I have years of engineering experience. Avoid dense jargon, unexplained internal shorthand or defect codes, and robotic/compressed ASD-STE100 prose. Walk through blockers, decisions, and multi-item checklists **one step at a time** rather than dumping everything at once, while keeping full technical accuracy and clickable file/line references. Follow another style only when I explicitly request it.
+- **Zero lingering ephemeral files (`[v]` full-teardown cleanup protocol):** Never scatter ephemeral or runtime-generated objects and files (logs, PID/lock/ownership receipts, temp/scratch files, local caches, runtime state directories, test/probe outputs, containers, images, or volumes) loose inside the core file structure where I would have to manually determine which files are leftover from previous runs versus part of the core codebase. Isolate runtime-generated files under dedicated gitignored runtime/temp paths, clean up single-run transient files (PIDs, locks, sockets, scratch dirs) on normal stop, and ensure the launcher's **`[v]` (full cleanup / teardown)** option deletes **all** ephemeral and runtime-generated files, directories, caches, logs, containers, images, and volumes created from running the app so `[v]` restores a clean core file structure (`[k]`, `[q]`, and `[r]` preserve intended persistent data/volumes, and coding agents never invoke `[v]` without my explicit authorization).
 
 </critical_context>
 
@@ -47,7 +54,7 @@ This is a **blockchain learning and research project**, not a production cryptoc
 - **Location:** `blockchain/`
 - **Master plan:** `docs/BLOCKCHAIN_MASTER_PLAN.md`
 - **Nature:** Educational/research -- learning blockchain internals by building
-- **Active code:** `blockchain_dev/bitcoin_wallet_dev/`
+- **Active code:** `bitcoin_wallet.py`, `constants.py`, `blockchain_dev/bitcoin_wallet_dev/src/btc_wallet/`, and `blockchain_dev/edu_node/src/edu_node/`
 - **Reference code:** `blockchain_dev/bitcoin_blockchain_dev/` (READ-ONLY)
 
 </project_identity>
@@ -58,7 +65,7 @@ This is a **blockchain learning and research project**, not a production cryptoc
 
 ## 2. Phase Constraints
 
-### Phase 1: Python Wallet Basics (current)
+### Phase 1: Python Wallet Basics (implemented)
 **In scope:**
 - Private key generation (cryptographically secure)
 - Public key derivation (ECDSA secp256k1, compressed)
@@ -70,14 +77,9 @@ This is a **blockchain learning and research project**, not a production cryptoc
 - pytest test suite with mocked RPC calls
 - Documentation (this file, master plan, status, versions)
 
-**Explicitly deferred:**
-- HD wallets (BIP-32/BIP-39/BIP-44) -- Phase 2
-- Multi-signature support -- Phase 2
-- SegWit / Bech32 addresses -- Phase 2
-- Custom blockchain implementation -- Phase 3
-- Smart contracts / scripting -- Phase 3
-- Frontend / UI -- Phase 3+
-- Docker containerization -- Phase 2+ (when there's a service to containerize)
+**Still deferred:**
+- Frontend / UI -- there is no web UI. The node API is dark-mode-ready only in the sense that it has no screens.
+- A production database. Phase 2 stores the encrypted wallet in a file. Phase 3 stores the chain in `chain.json` on a Docker volume. Postgres is not used.
 
 ### Phase 2: Enhanced Wallet with Key Management
 - BIP-32 hierarchical deterministic key derivation
@@ -107,7 +109,7 @@ This is a **blockchain learning and research project**, not a production cryptoc
 ## 3. Architecture & Code Rules
 
 ### Python conventions
-- **Python 3.11+**
+- **Python 3.13+**
 - **`from __future__ import annotations`** at the top of every module
 - Full type annotations on every function signature
 - **ruff** for lint + format (`line-length = 120`, rules: `["E", "F", "I", "N", "UP", "ANN", "S"]` -- `S` is the flake8-bandit family, see section 9a)
@@ -119,7 +121,7 @@ This is a **blockchain learning and research project**, not a production cryptoc
 ### Cryptography rules (security-sensitive)
 - **Never roll custom cryptography.** Use `ecdsa`, `hashlib`, `secrets`, `os.urandom` from the standard library or well-audited packages.
 - **Private keys are sensitive data.** Never log them, never print them in production code, never include them in error messages.
-- **Entropy sources:** `secrets.token_bytes()` and `os.urandom()` are the approved entropy sources. The current `random.getrandbits()` mixing is acceptable for educational purposes but would NOT be acceptable in production.
+- **Entropy sources:** `secrets.token_bytes()` and `os.urandom()` only.
 - **Signature encoding:** DER encoding via `ecdsa.util.sigencode_der` is correct for Bitcoin transactions.
 - **Address formats:** Phase 1 uses Base58Check (P2PKH, version byte `0x00` for mainnet). Phase 2 adds Bech32.
 
@@ -168,15 +170,23 @@ blockchain/
 │       └── phase-awareness/
 │           └── SKILL.md
 ├── .gitignore
+├── Dockerfile                             # Educational node image
+├── docker-compose.yml                     # edu-node on host port 8224
+├── run_blockchain.sh                      # macOS/Linux launcher
+├── run_blockchain.bat                     # Windows launcher
+├── bitcoin_wallet.py                      # Phase 1 BitcoinWallet
+├── constants.py                           # Phase 1 named values
 └── blockchain_dev/
     ├── bitcoin_blockchain_dev/            # READ-ONLY Bitcoin Core clone (gitignored)
-    │   └── ... (full Bitcoin Core C++ source)
-    └── bitcoin_wallet_dev/                # Active Python wallet development
-        └── bitcoin_wallet.py              # BitcoinWallet class
+    ├── bitcoin_wallet_dev/src/btc_wallet/ # Phase 2 package, one class per file, flat
+    └── edu_node/src/edu_node/             # Phase 3 educational node
 ```
 
 ### Key entrypoints
-- `blockchain_dev/bitcoin_wallet_dev/bitcoin_wallet.py` -- the wallet class, run with `python bitcoin_wallet.py`
+- `bitcoin_wallet.py` -- Phase 1 wallet. Run with `uv run python bitcoin_wallet.py`. Signing and broadcast of that path still use Bitcoin Core RPC.
+- `blockchain_dev/bitcoin_wallet_dev/src/btc_wallet/` -- Phase 2 package. Flat modules, not the nested tree the master plan first sketched. The local signer is educational and is not used by `create_and_send_transaction`.
+- `blockchain_dev/edu_node/src/edu_node/node_api.py` -- educational node. Importing it mines a chain under `EDU_CHAIN_DIR` or `.runtime/edu-chain`.
+- `run_blockchain.bat` / `run_blockchain.sh` -- start the container. Host port `8224`, container port `8000`.
 - `blockchain_dev/bitcoin_blockchain_dev/` -- Bitcoin Core reference (read-only, has its own `.git`)
 
 </file_structure>
@@ -219,6 +229,8 @@ The `blockchain_dev/bitcoin_blockchain_dev/` directory is a full clone of Bitcoi
 | `pytest-cov` | Coverage | `>=4.0` |
 | `ruff` | Lint + format | `>=0.3` |
 
+Phase 2 and Phase 3 also depend on `bech32`, `cryptography`, `mnemonic`, `fastapi`, and `uvicorn[standard]`. Those pins live in `pyproject.toml` and `uv.lock`.
+
 </tech_stack>
 
 ---
@@ -228,19 +240,21 @@ The `blockchain_dev/bitcoin_blockchain_dev/` directory is a full clone of Bitcoi
 ## 7. Local Commands
 
 ```bash
-# Run the wallet (requires Bitcoin Core running with RPC enabled)
-cd blockchain_dev/bitcoin_wallet_dev
-python bitcoin_wallet.py
+# Install runtime and test dependencies
+uv sync --all-groups
 
-# Run tests (when they exist)
-pytest tests/ -v --cov=blockchain_dev/bitcoin_wallet_dev
+# Run the wallet (requires Bitcoin Core running with RPC enabled)
+uv run python bitcoin_wallet.py
+
+# Run tests
+uv run pytest
 
 # Lint
-ruff check .
-ruff format --check .
+uvx ruff check .
+uvx ruff format --check .
 
 # SAST (same set the CI `sast` job runs -- see section 9a)
-uvx ruff check . && uvx semgrep scan --config auto --config p/owasp-top-ten --config p/python --severity ERROR --error && uv run --with pip-audit pip-audit && gitleaks detect --no-git --redact
+uvx ruff check . && uvx semgrep scan --config auto --config p/owasp-top-ten --config p/python --severity ERROR --error && uv run --with pip-audit pip-audit && gitleaks detect --no-git --redact --config .gitleaks.toml
 # gitleaks is a standalone binary (not on PyPI) -- install it locally; the other three run through uv.
 ```
 
@@ -265,8 +279,8 @@ After every significant change:
 
 ## 9. Versioning
 
-- **Source of truth:** `docs/versions.md` (no `pyproject.toml` yet -- will be created when the project gets packaged in Phase 2)
-- **Current version:** `0.1.0` (initial scaffold + existing wallet code)
+- **Released version:** `0.2.0` in `pyproject.toml`. Do not edit that field; the release workflow bumps it.
+- **Changelog:** `docs/versions.md`. The unreleased heading is `0.2.1`. New notes go under that heading until `0.2.1` is released.
 - Follows strict semver per global AGENTS.md section 6
 
 </versioning>
@@ -280,30 +294,35 @@ After every significant change:
 Per global AGENTS.md section 19. This is a wallet: the attack surface is small, but every boundary touches private keys or signed transactions, so the bar is production-grade regardless of the "educational" label.
 
 ### SAST scanning
-- **Wired.** `.github/workflows/ci.yml` (GitHub Actions -- public project) has a `sast` job (`needs: [lint]`) that fails on any HIGH/CRITICAL finding. When the `test` job lands it goes after `sast` (`needs: [sast]`) so the order stays `lint -> sast -> test`.
-- Tools as wired: **CodeQL** (`github/codeql-action` init -> analyze, language `python`, category `codeql`); **Semgrep** via `uvx semgrep scan --config auto --config p/owasp-top-ten --config p/python --severity ERROR --error --sarif`, SARIF uploaded through `github/codeql-action/upload-sarif` (category `semgrep`, `if: !cancelled()`), with a separate step failing the job on findings; **gitleaks** via `gitleaks/gitleaks-action@v2` on a `fetch-depth: 0` checkout (default ruleset -- the custom 64-hex/WIF private-key rule is pending; add it as `.gitleaks.toml` when the first test vector is committed); **`pip-audit`** via `uv run --with pip-audit pip-audit`. Job-level `permissions: contents: read, security-events: write, actions: read`.
-- **ruff `S` rules** are wired: `pyproject.toml` lint select is `["E", "F", "I", "N", "UP", "ANN", "S"]` and the tree is clean with no `noqa`. `S101` gets a per-file ignore under `tests/` when the test suite is created (no `tests/` exists yet).
-- Pending: project Semgrep rules in `.semgrep/` (none yet -- registry rulesets only); **Trivy** (`aquasecurity/trivy-action`, `--severity HIGH,CRITICAL --exit-code 1`) in `docker-build` once a Dockerfile exists (Phase 2+) -- no Dockerfile today, so no Trivy.
-- Local reproduction (see section 7): `uvx ruff check . && uvx semgrep scan --config auto --config p/owasp-top-ten --config p/python --severity ERROR --error && uv run --with pip-audit pip-audit && gitleaks detect --no-git --redact`.
+- **Wired.** `.github/workflows/ci.yml` (GitHub Actions -- public project) has a `sast` job (`needs: [lint]`) that fails on any HIGH/CRITICAL finding. When the `test` job lands it goes after `sast` (`needs: [sast]`) so the order stays `lint -> sast -> test -> docker-build`.
+- Tools as wired: **CodeQL** (`github/codeql-action` init -> analyze, language `python`, category `codeql`); **Semgrep** via `uvx semgrep scan --config auto --config p/owasp-top-ten --config p/python --severity ERROR --error --sarif`, SARIF uploaded through `github/codeql-action/upload-sarif` (category `semgrep`, `if: !cancelled()`), with a separate step failing the job on findings; **gitleaks** via `gitleaks/gitleaks-action@v2` on a `fetch-depth: 0` checkout with `GITLEAKS_CONFIG: .gitleaks.toml` (default rules plus the 64-hex and WIF rules); **`pip-audit`** via `uv run --with pip-audit pip-audit`. Job-level `permissions: contents: read, security-events: write, actions: read`. The `test` job is wired after `sast`.
+- **ruff `S` rules** are wired: `pyproject.toml` lint select is `["E", "F", "I", "N", "UP", "ANN", "S"]`. `tests/**` ignores `S101` only. The one other suppression is an inline `# noqa: S603` on the Windows `icacls` call, with a written reason: the executable path is computed under `SystemRoot` and `shell` is false.
+- **Trivy** is wired in the `docker-build` job (`aquasecurity/trivy-action@v0.36.0`, `exit-code` 1, severity `CRITICAL,HIGH`, `vuln-type` `os,library`, `ignore-unfixed` not set). A local scan of `blockchain-edu-node:ci` exits 1. The findings with no fixed release are the Debian packages named in the phase-gate note below, plus `ecdsa`. The runtime image does not include the base image's `pip`, whose vendored `certifi`, `msgpack`, and `urllib3` were the fixable findings. Project Semgrep rules in `.semgrep/` are still absent.
+- Local reproduction (see section 7): `uvx ruff check . && uvx semgrep scan --config auto --config p/owasp-top-ten --config p/python --severity ERROR --error && uv run --with pip-audit pip-audit && gitleaks detect --no-git --redact --config .gitleaks.toml`.
 
 ### Injection safety -- input boundary inventory
 
 | Boundary | Where | Injection classes | Required defense |
 |---|---|---|---|
-| RPC credentials file | `BitcoinWallet.get_rpc_credentials()` -- `rpc_credentials_file` ctor arg, `json.load`/`json.dump` | Path traversal, unsafe deserialization, secrets | Resolve path and require `resolved.is_relative_to(base.resolve())` (base = wallet directory); `json` only, never `pickle`; validate the decoded dict against a typed schema (`rpc_user`/`rpc_password` as `str`, nothing else) before use; file written with owner-only permissions; file stays gitignored |
-| RPC URL construction | `BitcoinWallet.connect_to_rpc()` -- `f'http://{rpc_user}:{rpc_password}@127.0.0.1:8332'` | Header/URL injection, SSRF, secrets | Percent-encode user and password (`urllib.parse.quote`) so `@`, `/`, `:`, CR/LF in a credential cannot rewrite the host; host/port are constants, never taken from the credentials file; credentials never echoed in logs or exceptions |
+| RPC credentials file | `BitcoinWallet.get_rpc_credentials()` -- `rpc_credentials_file` ctor arg, `json.load`/`json.dump` | Path traversal, unsafe deserialization, secrets | Resolve path and require `resolved.is_relative_to(base.resolve())` (base = wallet directory); `json` only, never `pickle`; validate the decoded dict against a typed schema (`rpc_user`/`rpc_password` as `str`, nothing else) before use; file written with owner-only permissions; file stays gitignored. On Windows, `SystemRoot` must match `X:\Windows` and `USERNAME` must be a plain account name before `icacls` runs with `shell` false |
+| RPC URL construction | `BitcoinWallet.connect_to_rpc()` -- `urlunsplit` of the fixed scheme, host, and port, with `quote(..., safe="")` on the user and password | Header/URL injection, SSRF, secrets | Percent-encode user and password (`urllib.parse.quote`) so `@`, `/`, `:`, CR/LF in a credential cannot rewrite the host; host/port are constants, never taken from the credentials file; credentials never echoed in logs or exceptions |
 | Bitcoin Core JSON-RPC responses | `listunspent`, `createrawtransaction`, `signrawtransactionwithkey`, `sendrawtransaction` via `AuthServiceProxy` | Unsafe deserialization, resource exhaustion, log injection | Treat the node as untrusted: validate UTXO entries (`txid` 64-hex, `vout` int >= 0, `amount` `Decimal`) before arithmetic or re-submission; cap the number of UTXOs iterated; `JSONRPCException` messages are logged via structured logging with CR/LF stripped, never interpolated into a shell or a further RPC call |
 | Send parameters | `create_and_send_transaction(recipient_address, amount)` and `__main__` | Input validation (address/amount), resource exhaustion | `recipient_address` must pass Base58Check decode + version-byte check (Bech32 validation added in Phase 2) before being placed in an output map; `amount` is `Decimal`, bounded `> 0` and `<= balance - fee`; never build the outputs dict from unvalidated strings |
-| Error output | `print(f"... {e}")` in every RPC wrapper | Secrets leakage, log injection | Exceptions never contain the private key or RPC password; replace `print` with `logging` using structured fields; `signrawtransactionwithkey` errors are logged without the arguments |
-| Entropy | `generate_private_key()` | Weak randomness (ruff `S311`) | `secrets.token_bytes` / `os.urandom` only; the `random.getrandbits` mix is flagged by `S311` and is removed as part of Phase 1 cleanup, not suppressed |
+| Error output | structured logging in every RPC wrapper | Secrets leakage, log injection | Exceptions never contain the private key or RPC password. Log text strips CR/LF and redacts the private key, RPC user, and RPC password. Sign errors log the method name only. |
+| Entropy | `generate_private_key()` | Weak randomness (ruff `S311`) | `secrets.token_bytes` / `os.urandom` only. The `random.getrandbits` mix has been removed. |
 
-Planned boundaries (documented here when built, per the master plan):
-- **Phase 2:** BIP-39 mnemonic input (wordlist allowlist + checksum before any derivation; never logged), encrypted wallet file at rest (AES-256-GCM via `cryptography`, authenticated decrypt before parsing, path-traversal check on the wallet path), `estimatesmartfee` RPC responses (validated numeric bounds).
-- **Phase 3:** FastAPI REST + WebSocket node API (Pydantic request models, body-size limits, pagination caps, explicit CORS allowlist), P2P TCP layer (bounded message framing, max block/tx size, per-peer rate limits, no deserialization beyond a typed wire schema), script engine (op-count and stack-size limits, no `eval`/`exec`, interpreter over an explicit opcode allowlist).
+Built boundaries:
+- **Phase 2 mnemonic:** `MnemonicSeed` accepts only 12 or 24 English words from the `mnemonic` wordlist, checks the checksum before any seed is derived, and never logs the phrase. The extra passphrase is a string capped at 1024 characters.
+- **Phase 2 wallet file:** AES-256-GCM via `cryptography`, with the file magic as additional data. The path must stay inside the wallet directory. Decrypt must authenticate before the plaintext is parsed. Owner-only permissions reuse the Phase 1 helper.
+- **Phase 2 fee estimate:** `estimatesmartfee` blocks are an integer from 1 to 1008. The payload is parsed as a `Decimal` rate, finite, greater than 0, and at most 1 BTC per kvB. A truthy error list is rejected.
+- **Phase 3 HTTP API:** Pydantic models use `extra=forbid`. `POST` and `PUT` and `PATCH` require a content-length of at most 64000 bytes. Page size is at most 50. CORS is an allowlist and falls back to `http://127.0.0.1:8224`. `*` is never allowed. The mine route does not accept a private key. Transaction errors return a generic message and do not echo the body. The websocket treats client text as a ping, not as instructions.
+- **Phase 3 peers:** Loopback only, port chosen by the OS, magic `EDU1`, a length cap, a checksum, and per-connection byte and message caps. A bad block closes the peer. A bad transaction is dropped and the peer stays.
+- **Phase 3 chain file:** JSON with one `blocks` key, a size cap, and a temp-file replace inside the store directory. The resolved path must stay in that directory.
+- **Phase 3 script engine:** An allowlist of push, dup, hash160, equalverify, checksig, and checkmultisig. No `eval` or `exec`. Opcode count, stack size, and item size are capped.
 
 ### Project-specific additions
 - `blockchain_dev/bitcoin_blockchain_dev/` (Bitcoin Core clone) is excluded from Semgrep/gitleaks paths -- it is read-only reference material, not project code, and is gitignored.
-- Private keys are the highest-value secret in the repo: gitleaks must carry a custom rule for 64-hex strings and WIF-prefixed strings in any committed file (pending -- the wired `gitleaks-action` currently runs its default ruleset); a test vector key is allowed only in `tests/` with an inline `# gitleaks:allow` and the published source of the vector.
+- Private keys are the highest-value secret in the repo. `.gitleaks.toml` adds a 64-hex rule and a WIF rule, and CI passes that file as `GITLEAKS_CONFIG`. The 64-hex rule uses word boundaries because this scanner's regex engine rejects lookaround; a 66-hex public key does not match. The path allowlist covers `uv.lock` package hashes, the virtualenv, bytecode caches, and `.runtime` test output. A test-vector key is allowed only on its own line with `# gitleaks:allow` and the published source of the vector.
 - Never send a mainnet transaction from CI or from a test. Tests mock `AuthServiceProxy`; the `sast` job has no network access to a node.
 
 The task-completion self-audit (section 11) now includes a **Security check** item.
@@ -317,17 +336,19 @@ The task-completion self-audit (section 11) now includes a **Security check** it
 ## 10. Phase Completion Gate -- Phase 1
 
 Phase 1 is done when:
-- [ ] `bitcoin_wallet.py` has full type annotations
-- [ ] `from __future__ import annotations` at top of every module
-- [ ] All functions have docstrings documenting parameters and return types
-- [ ] pytest test suite exists with tests for: key generation, public key derivation, address generation
-- [ ] Tests use known Bitcoin test vectors for validation
-- [ ] No magic numbers -- fee, network byte, etc. extracted to named constants
-- [ ] ruff passes cleanly (including `S` rules)
+- [x] `bitcoin_wallet.py` has full type annotations
+- [x] `from __future__ import annotations` at top of every module
+- [x] All functions have docstrings documenting parameters and return types
+- [x] pytest test suite exists with tests for: key generation, public key derivation, address generation
+- [x] Tests use known Bitcoin test vectors for validation
+- [x] No magic numbers -- fee, network byte, etc. extracted to named constants
+- [x] ruff passes cleanly (including `S` rules)
 - [ ] SAST green with zero HIGH/CRITICAL findings (`sast` job in `.github/workflows/ci.yml`)
-- [ ] All input boundaries injection-safe and documented in `<security>` (section 9a)
-- [ ] `docs/status.md` and `docs/versions.md` are current
-- [ ] README.md accurately describes the project and how to run it
+- [x] All input boundaries injection-safe and documented in `<security>` (section 9a)
+- [x] `docs/status.md` and `docs/versions.md` are current
+- [x] README.md accurately describes the project and how to run it
+
+The SAST box stays open on Phase 1, Phase 2, and Phase 3. On this machine, ruff and gitleaks are clean. Semgrep at error severity is clean on the tracked tree. The same scan of the untracked wallet and node source, copied outside the git tree because Semgrep 1.185.0 skips untracked files inside a repo, also found nothing (39 Python files). Semgrep's own default ignore leaves out `tests/`. `pip-audit` reports PYSEC-2026-1325 (also called CVE-2024-23342) twice, both for `ecdsa` 0.19.2. That advisory is high severity and has no fixed release. Phase 1 `create_and_send_transaction` still asks Bitcoin Core to sign. The Phase 2 educational signer calls `sign_digest_deterministic`, which is the timing-sensitive API the advisory names, and it is not on the hot send path. CodeQL runs in GitHub Actions and was not run here. Trivy on the local image exits 1. The only Python finding left is that same `ecdsa` advisory. Debian 13 still has high findings with no fixed package: util-linux CVE-2026-76642, CVE-2026-78408, CVE-2026-78409, and CVE-2026-78410; ncurses CVE-2025-69720; sqlite CVE-2026-119373, CVE-2026-119374, and CVE-2026-119379; systemd CVE-2026-16742; acl CVE-2026-54369; perl CVE-2026-9538. `ignore-unfixed` is not set.
 
 </definition_of_done>
 

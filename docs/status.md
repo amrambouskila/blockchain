@@ -1,50 +1,28 @@
 # Status
 
 ## Current State
-**Phase:** 1 -- Python Wallet Basics
-**Version:** 0.1.0 (initial scaffold)
+**Phase:** Phase 3 educational node is implemented, and Phase 2 wallet code is in place. The written SAST line on every phase is still open.
+**Released version:** 0.2.0 in `pyproject.toml`
+**Changelog head:** unreleased 0.2.1 in `docs/versions.md`
 
 ## What Exists
-- `blockchain_dev/bitcoin_wallet_dev/bitcoin_wallet.py` -- a working `BitcoinWallet` class with:
-  - Private key generation (mixed entropy: `secrets` + `os.urandom` + `random`)
-  - Compressed public key derivation (ECDSA secp256k1)
-  - P2PKH address generation (SHA-256 + RIPEMD-160 + Base58Check)
-  - Bitcoin Core RPC integration (balance, raw tx, sign, broadcast)
-  - RPC credential management (auto-generate + persist to JSON)
-- `blockchain_dev/bitcoin_blockchain_dev/` -- full Bitcoin Core clone for reference (read-only)
+- Phase 1 stays at the repo root: `bitcoin_wallet.py` and `constants.py`. `create_and_send_transaction` still asks Bitcoin Core at `127.0.0.1:8332` to sign and broadcast. Tests mock that RPC client and never touch mainnet.
+- Phase 2 lives in the flat package `blockchain_dev/bitcoin_wallet_dev/src/btc_wallet/`. It covers BIP-32, BIP-39 (12 or 24 English words), BIP-44, Bech32 and Bech32m, a P2SH multisig script, AES-256-GCM wallet files, coin selection, fee-estimate parsing, and a local educational signer. That signer is not used on the Phase 1 send path.
+- Phase 3 lives in `blockchain_dev/edu_node/src/edu_node/`. It is a small chain, not a Bitcoin clone: 80-byte headers, double-SHA256 proof of work, a short script allowlist, a mempool, loopback peers, and a FastAPI app. The chain file is `chain.json`. Docker stores it on the named volume `edu_chain`. There is no Postgres.
+- `uv run pytest` passed on this machine: 453 tests, coverage 100% on `bitcoin_wallet`, `constants`, `btc_wallet`, and `edu_node`.
+- GitHub Actions runs lint, then sast, then test (JUnit), then `docker-build` with Trivy. The image was built on this machine as `blockchain-edu-node:ci`. A short run returned health 200 and a genesis tip, and the container was removed.
 
-## What's Missing (Phase 1 remaining)
-- Type annotations (`from __future__ import annotations`, full signatures)
-- Named constants (network byte, default fee extracted from inline literals)
-- Docstrings on all methods
-- pytest test suite with known Bitcoin test vectors
-- ruff configuration
-- Edge case handling (invalid addresses, connection failures)
-
-## Recent Decisions
-- Project scaffolded with full documentation infrastructure (CLAUDE.md, master plan, status, versions, .claude hooks/commands/skills)
-- Bitcoin Core directory gitignored (it's a reference clone with its own .git)
-
-## Security
-
-### Verified state (2026-08-24)
-
-- **Semgrep: clean.** Verified locally by running this repo's own CI command against the working tree (0 findings). The invocation itself was broken before today — `semgrep ci` rejects `--severity`/`--error` and exited 2 without scanning.
-
-- Not run locally: gitleaks and Trivy are not part of any project toolchain here; both were exercised through their official images during verification, and CI runs them on every pipeline.
-- Security requirements are documented in CLAUDE.md / AGENTS.md `<security>` (section 9a) and the master plan's Security section; every phase gate now requires a green SAST stage and documented injection-safe input boundaries.
-- Wired:
-  - `sast` job in `.github/workflows/ci.yml` (`needs: [lint]`): CodeQL (python), Semgrep (`uvx semgrep scan`, `auto` + `p/owasp-top-ten` + `p/python`, severity ERROR, SARIF uploaded to code scanning), `gitleaks/gitleaks-action@v2`, `uv run --with pip-audit pip-audit`
-  - ruff `S` (flake8-bandit) family in `pyproject.toml` lint select; ruff clean, no `noqa`
-- Pending:
-  - `test` job chained after `sast` (no test suite yet, so no `S101` per-file ignore under `tests/` yet)
-  - Custom gitleaks rule for 64-hex / WIF private keys (`.gitleaks.toml`); `.semgrep/` project rules
-  - Trivy in `docker-build` once a Dockerfile exists (Phase 2+)
-  - Local Semgrep/gitleaks runs: not executed on this machine yet; gitleaks needs a local binary install
-  - Phase 1 boundary fixes from the inventory: path-containment check on `rpc_credentials_file`, percent-encoded RPC URL credentials, typed validation of RPC responses and send parameters, `logging` instead of `print` for errors, removal of the `random.getrandbits` entropy mix (`S311`)
+## Decisions that differ from the first plan
+- **Signing.** Phase 1 send stays on Bitcoin Core. The educational signer uses `ecdsa` `sign_digest_deterministic`. That is the timing-sensitive call named by the open advisory, and it is not on the hot send path.
+- **Storage.** The encrypted wallet is a file, not Postgres. The chain is `chain.json` on a Docker volume, not Postgres.
+- **Layout.** Phase 2 is a flat package, one class per file. It is not the nested `keys/` `address/` `wallet/` tree sketched in the master plan.
+- **Multisig.** Tests check the script bytes and the P2SH address. They do not call Bitcoin Core `verifymessage`.
+- **Chain choice.** The tip is the chain with the most work. Equal work keeps the first tip. Coinbase outputs can be spent in the next block. A new tip is announced by sending the whole chain, not only the new block.
 
 ## What's Next
-- Add type annotations and `from __future__ import annotations` to `bitcoin_wallet.py`
-- Extract magic numbers to named constants
-- Create pytest test suite with Bitcoin test vectors for key-to-address derivation
-- Add ruff configuration
+The code for all three phases is in place. The security-scan box stays open. `pip-audit` and Trivy both still report CVE-2024-23342 (PYSEC-2026-1325) in `ecdsa` 0.19.2, and there is no fixed release. Trivy also reports Debian 13 packages that have no fix yet: util-linux, ncurses, sqlite, systemd, acl, and perl. The ids are in `docs/versions.md`. Do not ignore those findings, and do not swap `ecdsa` unless you decide to. CodeQL runs in GitHub Actions and was not run here. `PROJECT_DOCUMENTATION.html` is stale: it still describes the older layout and version. There is no web UI.
+
+## Security
+- ruff, including its security rules, is clean. Semgrep at error severity is clean on the tracked tree. The untracked wallet and node source was copied outside the git tree and scanned the same way: 39 Python files, no findings. Semgrep's default ignore skips `tests/`. gitleaks is clean.
+- `pip-audit` is not clean, for the `ecdsa` advisory above. That is why the SAST boxes stay unchecked.
+- Host port `8224` is registered in `PORT_ASSIGNMENTS.md` for the educational node. Peers are not published.
