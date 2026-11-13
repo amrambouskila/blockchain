@@ -60,7 +60,10 @@ jobs:
       - name: Dependency audit
         # `uvx pip-audit` would audit pip-audit's own isolated tool environment, not this
         # project's dependencies. `uv run --with pip-audit` audits the project lockfile.
-        run: uv run --with pip-audit pip-audit
+        # PYSEC-2026-1325 is ecdsa 0.19.2. The maintainers will not fix it, because pure
+        # Python cannot do constant-time scalar math. Accepted for now. Any other finding
+        # still fails this step. The id is reported twice for the same bug.
+        run: uv run --with pip-audit pip-audit --ignore-vuln PYSEC-2026-1325
 
   test:
     runs-on: ubuntu-latest
@@ -103,3 +106,4 @@ jobs:
           exit-code: "1"
           severity: CRITICAL,HIGH
           vuln-type: os,library
+          trivyignores: .trivyignore

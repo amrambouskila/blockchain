@@ -1,0 +1,20 @@
+# Accepted 2026-11-13. These ids have no fixed release.
+# Any other high or critical finding still fails the scan.
+
+# python-ecdsa Minerva timing (PYSEC-2026-1325). The maintainers will not
+# fix it, because pure Python cannot do constant-time scalar math.
+CVE-2024-23342
+
+# Debian 13 packages. apt-get upgrade is already in the image, and no
+# fixed package has been published for these ids.
+CVE-2026-76642
+CVE-2026-78408
+CVE-2026-78409
+CVE-2026-78410
+CVE-2026-54369
+CVE-2025-69720
+CVE-2026-119373
+CVE-2026-119374
+CVE-2026-119379
+CVE-2026-16742
+CVE-2026-9538

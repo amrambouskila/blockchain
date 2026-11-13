@@ -68,9 +68,9 @@ graph TD
 
 | Phase | Focus | Status |
 |---|---|---|
-| **Phase 1** | Python wallet basics -- key generation, addresses, transactions | Code in place. The security-scan line is still open. |
-| **Phase 2** | Enhanced wallet -- BIP-32/39/44 HD keys, SegWit, multi-sig, encryption | Code in place. Same open security-scan line. |
-| **Phase 3** | Educational chain -- proof of work, peers, a small script allowlist | Code in place. Same open security-scan line. |
+| **Phase 1** | Python wallet basics -- key generation, addresses, transactions | Code in place. Security scan passes with one accepted `ecdsa` exception. |
+| **Phase 2** | Enhanced wallet -- BIP-32/39/44 HD keys, SegWit, multi-sig, encryption | Code in place. Same accepted exception. |
+| **Phase 3** | Educational chain -- proof of work, peers, a small script allowlist | Code in place. Same accepted exception. |
 
 ---
 
